@@ -1,0 +1,19 @@
+{
+  "name": "parametrix",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "live-server --port=8080 --entry-file=index.html"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.164.1",
+    "three-orbitcontrols": "^2.110.3"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
