@@ -7,3 +7,10 @@ export function createCube() {
         new THREE.MeshNormalMaterial()
     );
 }
+
+export function createSphere() {
+    return new THREE.Mesh(
+        new THREE.SphereGeometry(1),
+        new THREE.MeshNormalMaterial()
+    );
+}

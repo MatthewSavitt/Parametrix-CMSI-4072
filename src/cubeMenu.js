@@ -34,6 +34,16 @@ export function createCubeMenu(scene) {
             inputs[property][axis] = input;
         });
     });
+    
+    // Add Color Picker
+    const colorLabel = document.createElement('h4');
+    colorLabel.textContent = 'Color';
+    menuContainer.appendChild(colorLabel);
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = '#00ff00'; // Default color
+    menuContainer.appendChild(colorInput);
 
     // Add Cube Button
     const addButton = document.createElement('button');
@@ -57,8 +67,12 @@ export function createCubeMenu(scene) {
             y: parseFloat(inputs['Scale'].y.value),
             z: parseFloat(inputs['Scale'].z.value),
         };
-
-        const cube = createCube({ position, rotation, scale });
+        // if color
+        // if normal
+        // if etc
+        // --> make mesh color/normal/etc
+        const color = colorInput.value;
+        const cube = createCube({ position, rotation, scale }); // somehow apply mesh as well, idk if i should do color options first in cube menu 
         addObject(scene, cube);
     });
     menuContainer.appendChild(addButton);
