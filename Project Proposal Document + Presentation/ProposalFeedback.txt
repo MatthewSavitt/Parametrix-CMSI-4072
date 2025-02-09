@@ -1,0 +1,25 @@
+CMSI 4072 Spring 2025
+Project Proposal Feedback
+Project: Parametrix
+=========================
+Proposal Document [2 points]:
+   EXCELLENT work on the proposal document.  You have clearly outlined what
+   the project goals are and enumerated the features and explained them very
+   well.  You have provided justification for the project for its intended
+   users as well as as a capstone project with clarity.
+
+Proposal Presentation [3 points]:
+   Your presentation went well.  You obviously know your topic and what you
+   expect to accomplish this semester.  You described everything well and
+   answered questions well.  You talked to the audience and not the slides.
+
+   The one suggestion I have is to include some graphics in the slides so an
+   audience has some idea of what you are talking about.  For a project that
+   is this graphically oriented, having some pictures in the presentation is
+   never a bad idea!
+
+Summary:
+--------
+Total:  5% out of 5% for this deliverable.
+
+Nice job overall!  Great start to the semester, so keep up the good work.
