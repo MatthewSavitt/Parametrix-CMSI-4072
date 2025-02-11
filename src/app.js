@@ -1,6 +1,7 @@
 import * as THREE from './node_modules/three/build/three.module.js';
 import { createCameraControls } from './cameraControls.js';
 import { createCubeMenu } from './cubeMenu.js';
+import { createSphereMenu } from './sphereMenu.js';
 import { initializeObjectEditMenu } from './objectEditMenu.js';
 
 const scene = new THREE.Scene();
@@ -16,6 +17,7 @@ const getActiveCamera = createCameraControls(scene, renderer, perspectiveCamera)
 
 // Initialize cube menu
 createCubeMenu(scene);
+createSphereMenu(scene);
 initializeObjectEditMenu(scene, getActiveCamera(), renderer);
 // Handle window resize
 window.addEventListener('resize', () => {

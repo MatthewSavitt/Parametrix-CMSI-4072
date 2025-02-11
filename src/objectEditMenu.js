@@ -1,8 +1,7 @@
 import * as THREE from './node_modules/three/build/three.module.js';
-import { regenerateCurve } from './curve.js';
-import { addObject } from './objectManager.js';
+import { parametricFunctions } from './parametricFunctions.js'; // Import parametricFunctions
 
-export function initializeObjectEditMenu(scene, camera, renderer) {
+export function initializeObjectEditMenu(scene, camera, renderer, animationManager) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let selectedObject = null;
@@ -17,9 +16,21 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
     contextMenu.style.padding = '10px';
     contextMenu.style.borderRadius = '8px';
     contextMenu.style.zIndex = '1000';
+    contextMenu.style.display = 'flex'; // Use flexbox for two columns
     document.body.appendChild(contextMenu);
 
-    // Populate the context menu with inputs
+    // Left column for position, rotation, scale, and color
+    const leftColumn = document.createElement('div');
+    leftColumn.style.flex = '1';
+    leftColumn.style.marginRight = '10px'; // Add some spacing between columns
+    contextMenu.appendChild(leftColumn);
+
+    // Right column for parametric function controls
+    const rightColumn = document.createElement('div');
+    rightColumn.style.flex = '1';
+    contextMenu.appendChild(rightColumn);
+
+    // Populate the left column with inputs for position, rotation, scale, and color
     const properties = ['Position', 'Rotation', 'Scale'];
     const inputs = {};
     properties.forEach((property) => {
@@ -48,10 +59,19 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
             section.appendChild(wrapper);
         });
 
-        contextMenu.appendChild(section);
+        leftColumn.appendChild(section);
     });
 
-    // Apply button logic
+    // Add Color Picker
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.value = '#00ff00'; // Default color
+    const colorLabel = document.createElement('h4');
+    colorLabel.textContent = 'Color';
+    leftColumn.appendChild(colorLabel);
+    leftColumn.appendChild(colorInput);
+
+    // Apply button for left column
     const applyButton = document.createElement('button');
     applyButton.textContent = 'Apply Changes';
     applyButton.style.marginTop = '10px';
@@ -61,6 +81,7 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
         const position = {};
         const rotation = {};
         const scale = {};
+        const color = colorInput.value;
 
         ['x', 'y', 'z'].forEach((axis) => {
             position[axis] = parseFloat(inputs['Position'][axis].value) || 0;
@@ -71,62 +92,160 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
         selectedObject.position.set(position.x, position.y, position.z);
         selectedObject.rotation.set(rotation.x, rotation.y, rotation.z);
         selectedObject.scale.set(scale.x, scale.y, scale.z);
+        selectedObject.material.color.set(color);
 
         renderer.render(scene, camera);
         updateOutline(selectedObject); // Update the outline
     });
-    contextMenu.appendChild(applyButton);
+    leftColumn.appendChild(applyButton);
 
-        // Create shared Reset and Delete buttons
-        const resetButton = document.createElement('button');
-        resetButton.textContent = 'Reset';
-        resetButton.style.marginTop = '10px';
-        resetButton.addEventListener('click', () => {
-            if (!selectedObject) return;
-    
-            // Reset the object's position, rotation, and scale
-            selectedObject.position.set(0, 0, 0);
-            selectedObject.rotation.set(0, 0, 0);
-            selectedObject.scale.set(1, 1, 1);
-        
-            clearOutline();
-            renderer.render(scene, camera);
-            hideContextMenu();
-        });
-    
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.style.marginTop = '10px';
-        deleteButton.style.marginLeft = '0px';
-        deleteButton.addEventListener('click', () => {
-            if (!selectedObject) return;
-    
-            scene.remove(selectedObject);
-            selectedObject = null;
-            clearOutline();
-            renderer.render(scene, camera);
-            hideContextMenu();
-        });
-    
-        // Add hover effects for buttons
-        resetButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x0000ff)); // Blue
-        resetButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
-    
-        deleteButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0xff0000)); // Red
-        deleteButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
-    
-        contextMenu.appendChild(resetButton);
-        contextMenu.appendChild(deleteButton);
+    // Reset and Delete buttons
+    const resetButton = document.createElement('button');
+    resetButton.textContent = 'Reset';
+    resetButton.style.marginTop = '10px';
+    resetButton.addEventListener('click', () => {
+        if (!selectedObject) return;
 
-    // Raycaster logic with filtering for outline mesh
-    // Updated Raycaster logic to filter out the outline mesh
+        // Reset the object's position, rotation, and scale
+        selectedObject.position.set(0, 0, 0);
+        selectedObject.rotation.set(0, 0, 0);
+        selectedObject.scale.set(1, 1, 1);
+        selectedObject.material.color.set(0x00ff00); // Reset color
+
+        clearOutline();
+        renderer.render(scene, camera);
+        hideContextMenu();
+    });
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.style.marginTop = '10px';
+    deleteButton.style.marginLeft = '0px';
+    deleteButton.addEventListener('click', () => {
+        if (!selectedObject) return;
+
+        scene.remove(selectedObject);
+        selectedObject = null;
+        clearOutline();
+        renderer.render(scene, camera);
+        hideContextMenu();
+    });
+
+    // Add hover effects for buttons
+    resetButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x0000ff)); // Blue
+    resetButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
+
+    deleteButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0xff0000)); // Red
+    deleteButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
+
+    leftColumn.appendChild(resetButton);
+    leftColumn.appendChild(deleteButton);
+
+    // Right column: Parametric function controls
+    const parametricControls = document.createElement('div');
+    parametricControls.innerHTML = '<h4>Parametric Functions</h4>';
+    rightColumn.appendChild(parametricControls);
+
+    // Add collapsible submenus for position, rotation, and scale
+    const submenus = ['Position', 'Rotation', 'Scale'];
+    submenus.forEach((property) => {
+        const submenu = document.createElement('div');
+        submenu.innerHTML = `<h5>${property} Functions</h5>`;
+        submenu.style.marginBottom = '10px';
+
+        // Add a button to toggle the submenu
+        const toggleButton = document.createElement('button');
+        toggleButton.textContent = 'Toggle';
+        toggleButton.style.marginBottom = '5px';
+        toggleButton.addEventListener('click', () => {
+            const content = submenu.querySelector('.submenu-content');
+            content.style.display = content.style.display === 'none' ? 'block' : 'none';
+        });
+        submenu.appendChild(toggleButton);
+
+        // Add content for the submenu
+        const content = document.createElement('div');
+        content.className = 'submenu-content';
+        content.style.display = 'none'; // Initially hidden
+
+        // Function selection
+        const funcSelect = document.createElement('select');
+        Object.keys(parametricFunctions).forEach((funcName) => {
+            const option = document.createElement('option');
+            option.value = funcName;
+            option.textContent = funcName;
+            funcSelect.appendChild(option);
+        });
+        content.appendChild(funcSelect);
+
+        // Start and end values
+        const startInput = document.createElement('input');
+        startInput.type = 'number';
+        startInput.placeholder = 'Start value';
+        content.appendChild(startInput);
+
+        const endInput = document.createElement('input');
+        endInput.type = 'number';
+        endInput.placeholder = 'End value';
+        content.appendChild(endInput);
+
+        // Number of samples
+        const samplesInput = document.createElement('input');
+        samplesInput.type = 'number';
+        samplesInput.placeholder = 'Number of samples';
+        content.appendChild(samplesInput);
+
+        // Step rate
+        const stepRateInput = document.createElement('input');
+        stepRateInput.type = 'number';
+        stepRateInput.placeholder = 'Step rate';
+        content.appendChild(stepRateInput);
+
+        // Apply button for parametric function
+        const applyParametricButton = document.createElement('button');
+        applyParametricButton.textContent = `Apply to ${property}`;
+        applyParametricButton.addEventListener('click', () => {
+            if (!selectedObject) return;
+
+            const funcName = funcSelect.value;
+            const startT = parseFloat(startInput.value);
+            const endT = parseFloat(endInput.value);
+            const numSamples = parseInt(samplesInput.value, 10);
+            const stepRate = parseInt(stepRateInput.value, 10);
+
+            const params = parametricFunctions[funcName].params;
+            animationManager.addParametricAnimation(selectedObject, funcName, params, startT, endT, numSamples, stepRate);
+
+            // Draw the animation path
+            drawAnimationPath(selectedObject, funcName, params, startT, endT, numSamples);
+        });
+        content.appendChild(applyParametricButton);
+
+        submenu.appendChild(content);
+        parametricControls.appendChild(submenu);
+    });
+
+    // Function to draw the animation path
+    function drawAnimationPath(object, funcName, params, startT, endT, numSamples) {
+        const samples = animationManager.generateSamples(funcName, params, startT, endT, numSamples, 1);
+        const points = samples.map((sample) => new THREE.Vector3(sample.x, sample.y, sample.z));
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({ color: 0xff0000 });
+        const line = new THREE.Line(geometry, material);
+        scene.add(line);
+    }
+
+    // Prevent default right-click behavior
+    document.addEventListener('contextmenu', (event) => event.preventDefault());
+
+    // Handle right-click to show the context menu
     document.addEventListener('mousedown', (event) => {
-        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+        if (event.button === 2) { // Right-click
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
-        raycaster.setFromCamera(mouse, camera);
+            raycaster.setFromCamera(mouse, camera);
 
-        if (event.button === 2) {
             // Get intersected objects, excluding the outline mesh
             const intersects = raycaster.intersectObjects(
                 scene.children.filter((child) => child !== outlineMesh)
@@ -136,7 +255,6 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
                 selectedObject = intersects[0].object;
                 showContextMenu(event.clientX, event.clientY);
                 updateOutline(selectedObject);
-                event.preventDefault();
             } else {
                 hideContextMenu();
                 clearOutline();
@@ -144,15 +262,23 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
         }
     });
 
-
-    document.addEventListener('contextmenu', (event) => event.preventDefault());
-
+    // Show the context menu at the specified position
     function showContextMenu(x, y) {
         if (!selectedObject) return;
 
-        contextMenu.style.display = 'block';
+        contextMenu.style.display = 'flex'; // Use flexbox for two columns
         contextMenu.style.left = `${x}px`;
         contextMenu.style.top = `${y}px`;
+
+        // Adjust position if the menu overflows below the viewport
+        const rect = contextMenu.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+
+        if (rect.bottom > viewportHeight) {
+            // Move the menu up to fit within the viewport
+            const overflow = rect.bottom - viewportHeight;
+            contextMenu.style.top = `${y - overflow}px`;
+        }
 
         // Populate inputs
         ['Position', 'Rotation', 'Scale'].forEach((property) => {
@@ -165,10 +291,12 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
         });
     }
 
+    // Hide the context menu
     function hideContextMenu() {
         contextMenu.style.display = 'none';
     }
 
+    // Update the outline of the selected object
     function updateOutline(object) {
         if (outlineMesh) scene.remove(outlineMesh);
 
@@ -182,6 +310,7 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
         scene.add(outlineMesh);
     }
 
+    // Clear the outline
     function clearOutline() {
         if (outlineMesh) {
             scene.remove(outlineMesh); // Remove from the scene
@@ -190,7 +319,8 @@ export function initializeObjectEditMenu(scene, camera, renderer) {
             outlineMesh = null; // Clear reference
         }
     }
-    
+
+    // Animate the outline color
     function animateOutlineColor(object, targetColor) {
         if (!outlineMesh) return;
 

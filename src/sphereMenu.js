@@ -1,10 +1,10 @@
 import { createMenuTemplate } from './menuTemplate.js';
-import { createCube, addObject } from './objectManager.js';
+import { createSphere, addObject } from './objectManager.js';
 import * as THREE from './node_modules/three/build/three.module.js';
 
-export function createCubeMenu(scene) {
+export function createSphereMenu(scene) {
     // Create the menu template
-    const { menuContainer } = createMenuTemplate('🟩', 10, 50);
+    const { menuContainer } = createMenuTemplate('🟢', 10, 90);
     document.body.appendChild(menuContainer);
     // Input elements for position, rotation, and scale
     const properties = ['Position', 'Rotation', 'Scale'];
@@ -25,7 +25,7 @@ export function createCubeMenu(scene) {
             const input = document.createElement('input');
             input.type = 'number';
             input.style.width = '50px';
-            input.value = property === 'Scale' ? 1 : 0; // Default scale is 1, others 0
+            input.value = property === 'Scale' ? 0.5 : 0; // Default scale is 0.5, others 0
 
             wrapper.appendChild(input);
             menuContainer.appendChild(wrapper);
@@ -45,9 +45,9 @@ export function createCubeMenu(scene) {
     colorInput.value = '#00ff00'; // Default color
     menuContainer.appendChild(colorInput);
 
-    // Add Cube Button
+    // Add Sphere Button
     const addButton = document.createElement('button');
-    addButton.textContent = 'Add Cube';
+    addButton.textContent = 'Add Sphere';
     addButton.style.marginTop = '10px';
     addButton.addEventListener('click', () => {
         const position = {
@@ -67,9 +67,10 @@ export function createCubeMenu(scene) {
             y: parseFloat(inputs['Scale'].y.value),
             z: parseFloat(inputs['Scale'].z.value),
         };
+  
         const color = colorInput.value;
-        const cube = createCube({ position, rotation, scale, color });
-        addObject(scene, cube);
+        const sphere = createSphere({ position, rotation, scale, color }); 
+        addObject(scene, sphere);
     });
     menuContainer.appendChild(addButton);
 }
