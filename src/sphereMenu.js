@@ -1,5 +1,6 @@
 import { createMenuTemplate } from './menuTemplate.js';
-import { createSphere, addObject } from './objectManager.js';
+import { addObject } from './objectManager.js';
+import { createSphere } from './objects.js';
 import * as THREE from './node_modules/three/build/three.module.js';
 
 export function createSphereMenu(scene) {
