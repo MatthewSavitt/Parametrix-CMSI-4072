@@ -48,3 +48,62 @@ export function createCube(options) {
 export function createSphere(options) {
     return createObject(() => new THREE.SphereGeometry(), options);
 }
+
+// need the knowledge of functions to create a cylinder, cone, and torus
+/**
+ * Creates a cylinder using the general `createObject` function.
+ * @param {object} options - Customization options.
+ * @returns {THREE.Mesh} The created cylinder.
+ */
+export function createCylinder(options) {
+    return createObject(() => new THREE.CylinderGeometry(
+        options.radiusTop || 1, 
+        options.radiusBottom || 1, 
+        options.height || 1, 
+        options.radialSegments || 8
+    ), options);
+}
+/**
+ * Creates a cone using the general `createObject` function.
+ * @param {object} options - Customization options.
+ * @returns {THREE.Mesh} The created cone.
+ */
+export function createCone(options) {
+    return createObject(() => new THREE.ConeGeometry(
+        options.radius || 1, 
+        options.height || 1, 
+        options.radialSegments || 8
+    ), options);
+}
+/**
+ * Creates a torus using the general `createObject` function.
+ * @param {object} options - Customization options.
+ * @returns {THREE.Mesh} The created torus.
+ */
+export function createTorus(options) {
+    return createObject(() => new THREE.TorusGeometry(
+        options.radius || 1, 
+        options.tube || 0.4, 
+        options.radialSegments || 16, 
+        options.tubularSegments || 100
+    ), options);
+}
+/**
+ * Creates a plane using the general `createObject` function.
+ * @param {object} options - Customization options.
+ * @returns {THREE.Mesh} The created plane.
+ */
+export function createPlane(options) {
+    return createObject(() => new THREE.PlaneGeometry(
+        options.width || 1, 
+        options.height || 1
+    ), options);
+}
+/**
+ * Creates a line using the general `createObject` function.
+ * @param {object} options - Customization options.
+ * @returns {THREE.Mesh} The created line.
+ */
+export function createLine(options) {
+    return createObject(() => new THREE.BufferGeometry(), options);
+}

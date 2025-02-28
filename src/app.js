@@ -3,9 +3,16 @@ import { createCameraControls } from './cameraControls.js';
 import { createCubeMenu } from './cubeMenu.js';
 import { createSphereMenu } from './sphereMenu.js';
 import { initializeObjectEditMenu } from './objectEditMenu.js';
+// import animation manager
+import { AnimationManager } from './animationManager.js';
+import { createPlaybackHUD } from './animationHud.js';
+import { addObject, removeObject, getObjects } from './objectManager.js';
+
 
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer();
+const animManager = new AnimationManager(scene);
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
@@ -18,7 +25,12 @@ const getActiveCamera = createCameraControls(scene, renderer, perspectiveCamera)
 // Initialize cube menu
 createCubeMenu(scene);
 createSphereMenu(scene);
-initializeObjectEditMenu(scene, getActiveCamera(), renderer);
+// Initialize the animation HUD
+createPlaybackHUD(animManager);
+initializeObjectEditMenu(scene, getActiveCamera(), renderer, animManager);
+
+let lastTime = performance.now();
+
 // Handle window resize
 window.addEventListener('resize', () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -36,11 +48,31 @@ window.addEventListener('resize', () => {
     activeCamera.updateProjectionMatrix();
 });
 
-// Animation loop
+// In app.js, let's add some debug code to verify animations are running:
+
 function animate() {
     requestAnimationFrame(animate);
-
-    // Dynamically use the current active camera
+    
+    const currentTime = performance.now();
+    const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
+    lastTime = currentTime;
+    
+    // Debug log every second
+    if (Math.floor(currentTime/1000) !== Math.floor(lastTime/1000)) {
+        console.log(`Animation time: ${animManager.globalTime.toFixed(2)}s, Paused: ${animManager.isPaused}`);
+        console.log(`Active animations: ${animManager.animations.length}`);
+    }
+    
+    // Update animation manager
+    animManager.update(deltaTime);
+    
+    // Update camera controls
+    const activeCamera = getActiveCamera();
+    if (activeCamera.update) {
+        activeCamera.update();
+    }
+    
+    // Render the scene
     renderer.render(scene, getActiveCamera());
 }
 
