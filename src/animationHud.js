@@ -25,7 +25,7 @@ export function createPlaybackHUD(animationManager, scene) {
     // Start time input (replacing the label)
     const startTimeInput = document.createElement('input');
     startTimeInput.type = 'number';
-    startTimeInput.value = animationManager.startTime.toFixed(1);
+    startTimeInput.value = animationManager.startTime.toFixed(2);
     startTimeInput.step = '0.1';
     startTimeInput.style.width = '50px';
     startTimeInput.style.marginRight = '5px';
@@ -71,7 +71,7 @@ export function createPlaybackHUD(animationManager, scene) {
     // End time input (replacing the label)
     const endTimeInput = document.createElement('input');
     endTimeInput.type = 'number';
-    endTimeInput.value = animationManager.endTime.toFixed(1);
+    endTimeInput.value = animationManager.endTime.toFixed(2);
     endTimeInput.step = '0.1';
     endTimeInput.style.width = '50px';
     endTimeInput.style.marginLeft = '5px';

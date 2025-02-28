@@ -6,7 +6,7 @@ export class AnimationManager {
         this.isPaused = true; // Playback state
         this.loop = true; // Global loop toggle
         this.startTime = 0; // Start time for the animation
-        this.endTime = 10; // End time for the animation
+        this.endTime = 6.28; // End time for the animation
     }
 
 
@@ -162,7 +162,7 @@ export class AnimationManager {
     recalculateTimeRange() {
         if (this.animations.length === 0) {
             this.startTime = 0;
-            this.endTime = 10; // Default
+            this.endTime = 6.28; // Default
             return;
         }
         
