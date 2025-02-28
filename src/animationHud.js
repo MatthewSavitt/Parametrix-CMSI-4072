@@ -33,7 +33,7 @@ export function createPlaybackHUD(animationManager, scene) {
     startTimeInput.style.textAlign = 'center';
     startTimeInput.addEventListener('input', () => {
         console.log("Start time input changed to:", startTimeInput.value);
-        const newStartTime = parseFloat(startTimeInput.value);
+        const newStartTime = parseFloat(startTimeInput.value >= 0 ? startTimeInput.value : 0);
         if (!isNaN(newStartTime)) {
             animationManager.startTime = newStartTime;
             
