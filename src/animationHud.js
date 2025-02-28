@@ -22,11 +22,33 @@ export function createPlaybackHUD(animationManager, scene) {
     scrubberContainer.style.alignItems = 'center';
     scrubberContainer.style.marginBottom = '10px';
     
-    // Start time label
-    const startTimeLabel = document.createElement('span');
-    startTimeLabel.textContent = animationManager.startTime.toFixed(1);
-    startTimeLabel.style.marginRight = '5px';
-    scrubberContainer.appendChild(startTimeLabel);
+    // Start time input (replacing the label)
+    const startTimeInput = document.createElement('input');
+    startTimeInput.type = 'number';
+    startTimeInput.value = animationManager.startTime.toFixed(1);
+    startTimeInput.step = '0.1';
+    startTimeInput.style.width = '50px';
+    startTimeInput.style.marginRight = '5px';
+    startTimeInput.style.padding = '2px';
+    startTimeInput.style.textAlign = 'center';
+    startTimeInput.addEventListener('input', () => {
+        console.log("Start time input changed to:", startTimeInput.value);
+        const newStartTime = parseFloat(startTimeInput.value);
+        if (!isNaN(newStartTime)) {
+            animationManager.startTime = newStartTime;
+            
+            // Update scrubber min value
+            scrubber.min = newStartTime;
+            
+            // If current time is less than new start time, update it
+            if (animationManager.globalTime < newStartTime) {
+                animationManager.setTime(newStartTime);
+                scrubber.value = newStartTime;
+                timeDisplay.textContent = `Time: ${newStartTime.toFixed(2)}s`;
+            }
+        }
+    });
+    scrubberContainer.appendChild(startTimeInput);
     
     // Scrubber input
     const scrubber = document.createElement('input');
@@ -36,42 +58,6 @@ export function createPlaybackHUD(animationManager, scene) {
     scrubber.step = 0.01;
     scrubber.value = animationManager.globalTime;
     scrubber.style.flex = '1';
-
-    // Add path visibility toggle
-    const pathToggleContainer = document.createElement('div');
-    pathToggleContainer.style.marginTop = '10px';
-    pathToggleContainer.style.display = 'flex';
-    pathToggleContainer.style.alignItems = 'center';
-    
-    const pathToggleLabel = document.createElement('div');
-    pathToggleLabel.textContent = 'Show Paths:';
-    pathToggleLabel.style.marginRight = '10px';
-    pathToggleContainer.appendChild(pathToggleLabel);
-    
-    const pathToggleCheckbox = document.createElement('input');
-    pathToggleCheckbox.type = 'checkbox';
-    pathToggleCheckbox.checked = true; // Default to showing paths
-    pathToggleCheckbox.id = 'path-toggle';
-    pathToggleContainer.appendChild(pathToggleCheckbox);
-    
-    pathToggleCheckbox.addEventListener('change', () => {
-        // Set global flag
-        window.showAnimationPaths = pathToggleCheckbox.checked;
-        
-        // Toggle visibility of all existing paths
-        if (scene) {
-            scene.traverse(obj => {
-                if (obj.isAnimationPath) {
-                    obj.visible = pathToggleCheckbox.checked;
-                }
-            });
-        }
-    });
-    
-    hudContainer.appendChild(pathToggleContainer);
-    
-    // Set initial global state
-    window.showAnimationPaths = true;
     
     // When the scrubber is moved, update the time
     scrubber.addEventListener('input', () => {
@@ -82,11 +68,26 @@ export function createPlaybackHUD(animationManager, scene) {
     
     scrubberContainer.appendChild(scrubber);
     
-    // End time label
-    const endTimeLabel = document.createElement('span');
-    endTimeLabel.textContent = animationManager.endTime.toFixed(1);
-    endTimeLabel.style.marginLeft = '5px';
-    scrubberContainer.appendChild(endTimeLabel);
+    // End time input (replacing the label)
+    const endTimeInput = document.createElement('input');
+    endTimeInput.type = 'number';
+    endTimeInput.value = animationManager.endTime.toFixed(1);
+    endTimeInput.step = '0.1';
+    endTimeInput.style.width = '50px';
+    endTimeInput.style.marginLeft = '5px';
+    endTimeInput.style.padding = '2px';
+    endTimeInput.style.textAlign = 'center';
+    endTimeInput.addEventListener('input', () => {
+        console.log("End time input changed to:", endTimeInput.value);
+        const newEndTime = parseFloat(endTimeInput.value);
+        if (!isNaN(newEndTime)) {
+            animationManager.endTime = newEndTime;
+            
+            // Update scrubber max value
+            scrubber.max = newEndTime;
+        }
+    });
+    scrubberContainer.appendChild(endTimeInput);
     
     hudContainer.appendChild(scrubberContainer);
     
@@ -126,6 +127,43 @@ export function createPlaybackHUD(animationManager, scene) {
     controlsContainer.appendChild(resetButton);
 
     hudContainer.appendChild(controlsContainer);
+    
+    // Add path visibility toggle
+    const pathToggleContainer = document.createElement('div');
+    pathToggleContainer.style.marginTop = '10px';
+    pathToggleContainer.style.display = 'flex';
+    pathToggleContainer.style.alignItems = 'center';
+    
+    const pathToggleLabel = document.createElement('div');
+    pathToggleLabel.textContent = 'Show Paths:';
+    pathToggleLabel.style.marginRight = '10px';
+    pathToggleContainer.appendChild(pathToggleLabel);
+    
+    const pathToggleCheckbox = document.createElement('input');
+    pathToggleCheckbox.type = 'checkbox';
+    pathToggleCheckbox.checked = true; // Default to showing paths
+    pathToggleCheckbox.id = 'path-toggle';
+    pathToggleContainer.appendChild(pathToggleCheckbox);
+    
+    pathToggleCheckbox.addEventListener('change', () => {
+        // Set global flag
+        window.showAnimationPaths = pathToggleCheckbox.checked;
+        
+        // Toggle visibility of all existing paths
+        if (scene) {
+            scene.traverse(obj => {
+                if (obj.isAnimationPath) {
+                    obj.visible = pathToggleCheckbox.checked;
+                }
+            });
+        }
+    });
+    
+    hudContainer.appendChild(pathToggleContainer);
+    
+    // Set initial global state
+    window.showAnimationPaths = true;
+    
     document.body.appendChild(hudContainer);
     
     // Update the time display and scrubber every frame
@@ -135,15 +173,15 @@ export function createPlaybackHUD(animationManager, scene) {
             scrubber.value = animationManager.globalTime;
         }
         
-        // Update min/max of scrubber if timeline range changed
-        if (parseFloat(scrubber.min) !== animationManager.startTime) {
+        // Update input fields if timeline range changed externally
+        if (Math.abs(parseFloat(startTimeInput.value) - animationManager.startTime) > 0.01) {
+            startTimeInput.value = animationManager.startTime.toFixed(1);
             scrubber.min = animationManager.startTime;
-            startTimeLabel.textContent = animationManager.startTime.toFixed(1);
         }
         
-        if (parseFloat(scrubber.max) !== animationManager.endTime) {
+        if (Math.abs(parseFloat(endTimeInput.value) - animationManager.endTime) > 0.01) {
+            endTimeInput.value = animationManager.endTime.toFixed(1);
             scrubber.max = animationManager.endTime;
-            endTimeLabel.textContent = animationManager.endTime.toFixed(1);
         }
         
         requestAnimationFrame(updateHUD);
