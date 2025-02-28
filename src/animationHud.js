@@ -1,4 +1,4 @@
-export function createPlaybackHUD(animationManager) {
+export function createPlaybackHUD(animationManager, scene) {
     // Create a simple HUD for playback controls
     const hudContainer = document.createElement('div');
     hudContainer.style.position = 'absolute';
@@ -59,11 +59,13 @@ export function createPlaybackHUD(animationManager) {
         window.showAnimationPaths = pathToggleCheckbox.checked;
         
         // Toggle visibility of all existing paths
-        scene.traverse(obj => {
-            if (obj.isAnimationPath) {
-                obj.visible = pathToggleCheckbox.checked;
-            }
-        });
+        if (scene) {
+            scene.traverse(obj => {
+                if (obj.isAnimationPath) {
+                    obj.visible = pathToggleCheckbox.checked;
+                }
+            });
+        }
     });
     
     hudContainer.appendChild(pathToggleContainer);

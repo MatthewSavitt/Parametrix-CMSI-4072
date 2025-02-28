@@ -600,14 +600,14 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         // Link the outline to follow the object
         outlineMesh.position.copy(object.position);
         outlineMesh.rotation.copy(object.rotation);
-        outlineMesh.scale.copy(object.scale).multiplyScalar(1.05); // Slightly larger
+        outlineMesh.scale.copy(object.scale).multiplyScalar(1.1); // Slightly larger
         
         // Make the outline follow the object by adding an update function
         outlineMesh.update = () => {
             if (selectedObject) {
                 outlineMesh.position.copy(selectedObject.position);
                 outlineMesh.rotation.copy(selectedObject.rotation);
-                outlineMesh.scale.copy(selectedObject.scale).multiplyScalar(1.05);
+                outlineMesh.scale.copy(selectedObject.scale).multiplyScalar(1.1);
             }
         };
         
@@ -663,7 +663,9 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
 
             // Get intersected objects, excluding the outline mesh
             const intersects = raycaster.intersectObjects(
-                scene.children.filter((child) => child !== outlineMesh)
+                scene.children.filter((child) => {
+                    return child !== outlineMesh && !child.isAnimationPath;
+                })
             );
 
             if (intersects.length > 0) {
@@ -719,6 +721,14 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     
     // Expose the redrawAllAnimationPaths function for external use
     return {
-        redrawAllAnimationPaths
+        redrawAllAnimationPaths,
+        updateOutlineForAnimation: () => {
+            if (outlineMesh && selectedObject) {
+                outlineMesh.position.copy(selectedObject.position);
+                outlineMesh.rotation.copy(selectedObject.rotation);
+                outlineMesh.scale.copy(selectedObject.scale).multiplyScalar(1.1);
+            }
+        },
+        hasActiveOutline: () => outlineMesh !== null
     };
 }

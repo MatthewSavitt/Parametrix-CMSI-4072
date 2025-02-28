@@ -26,8 +26,8 @@ const getActiveCamera = createCameraControls(scene, renderer, perspectiveCamera)
 createCubeMenu(scene);
 createSphereMenu(scene);
 // Initialize the animation HUD
-createPlaybackHUD(animManager);
-initializeObjectEditMenu(scene, getActiveCamera(), renderer, animManager);
+createPlaybackHUD(animManager, scene);
+const objectEditor = initializeObjectEditMenu(scene, getActiveCamera(), renderer, animManager);
 
 let lastTime = performance.now();
 
@@ -70,6 +70,11 @@ function animate() {
     const activeCamera = getActiveCamera();
     if (activeCamera.update) {
         activeCamera.update();
+    }
+
+    // Update the outline to follow the selected object if it's animated
+    if (objectEditor.hasActiveOutline()) {
+        objectEditor.updateOutlineForAnimation();
     }
     
     // Render the scene
