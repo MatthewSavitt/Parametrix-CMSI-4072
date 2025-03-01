@@ -1,16 +1,14 @@
 import * as THREE from './node_modules/three/build/three.module.js';
 import { createMenuTemplate } from './menuTemplate.js';
+import { initializeCameraKeyboardControls } from './cameraKeyboardControls.js';
 
 export function createCameraControls(scene, renderer, initialCamera) {
     let activeCamera = initialCamera;
     let cameraChangeCallbacks = [];
-    // Add a function to notify camera change
-    const notifyCameraChange = (camera) => {
-        cameraChangeCallbacks.forEach(callback => callback(camera));
-    };
+    
     // Create orthographic camera
     const aspectRatio = window.innerWidth / window.innerHeight;
-    const orthographicSize = 5; // This controls the "zoom level"
+    const orthographicSize = 5; // Controls zoom level
     const orthographicCamera = new THREE.OrthographicCamera(
         -orthographicSize * aspectRatio,  // left
         orthographicSize * aspectRatio,   // right
@@ -21,57 +19,122 @@ export function createCameraControls(scene, renderer, initialCamera) {
     );
     orthographicCamera.position.z = 5;
 
+    // Function to notify about camera changes
+    const notifyCameraChange = (camera) => {
+        cameraChangeCallbacks.forEach(callback => callback(camera));
+    };
+
+    // Store references to UI inputs
+    const positionInputs = {};
+    const rotationInputs = {};
+
     // Create the menu template
     const { menuContainer } = createMenuTemplate('📷', 10, 10);
     document.body.appendChild(menuContainer);
-    // Transformation values for each property
-    const transformValues = {
-        position: { x: activeCamera.position.x, y: activeCamera.position.y, z: activeCamera.position.z },
-        rotation: { x: activeCamera.rotation.x, y: activeCamera.rotation.y, z: activeCamera.rotation.z },
-    };
 
-    // Add inputs for position and rotation
-    const positionInputs = createDebouncedInputGroup('Position', ['x', 'y', 'z'], (axis, value) => {
+    // Add inputs for position
+    const positionInputGroup = createDebouncedInputGroup('Position', ['x', 'y', 'z'], (axis, value) => {
         smoothlyMoveCamera(activeCamera, axis, parseFloat(value), 'position');
     });
-
-    const rotationInputs = createDebouncedInputGroup('Rotation', ['x', 'y', 'z'], (axis, value) => {
+    positionInputs.x = positionInputGroup.querySelector('input[data-axis="x"]');
+    positionInputs.y = positionInputGroup.querySelector('input[data-axis="y"]');
+    positionInputs.z = positionInputGroup.querySelector('input[data-axis="z"]');
+    menuContainer.appendChild(positionInputGroup);
+    
+    // Add inputs for rotation
+    const rotationInputGroup = createDebouncedInputGroup('Rotation', ['x', 'y', 'z'], (axis, value) => {
         smoothlyMoveCamera(activeCamera, axis, THREE.MathUtils.degToRad(parseFloat(value)), 'rotation');
     });
+    rotationInputs.x = rotationInputGroup.querySelector('input[data-axis="x"]');
+    rotationInputs.y = rotationInputGroup.querySelector('input[data-axis="y"]');
+    rotationInputs.z = rotationInputGroup.querySelector('input[data-axis="z"]');
+    menuContainer.appendChild(rotationInputGroup);
+
+    // Initialize UI with current camera values
+    updateInputValues();
 
     // Camera type toggle button
     const cameraTypeToggle = document.createElement('button');
     cameraTypeToggle.textContent = 'Switch to Orthographic';
     cameraTypeToggle.style.marginTop = '10px';
+    cameraTypeToggle.style.width = '100%';
+    cameraTypeToggle.style.padding = '5px';
     cameraTypeToggle.addEventListener('click', () => {
         if (activeCamera.isPerspectiveCamera) {
+            // Switching from perspective to orthographic
+            // Copy position and rotation values
             orthographicCamera.position.copy(activeCamera.position);
             orthographicCamera.rotation.copy(activeCamera.rotation);
+            
+            // Update the active camera
             activeCamera = orthographicCamera;
             cameraTypeToggle.textContent = 'Switch to Perspective';
         } else {
+            // Switching from orthographic to perspective
+            // Copy position and rotation values
             initialCamera.position.copy(activeCamera.position);
-            initialCamera.rotation.copy(activeCamera.rotation);    
+            initialCamera.rotation.copy(activeCamera.rotation);
+            
+            // Update the active camera
             activeCamera = initialCamera;
             cameraTypeToggle.textContent = 'Switch to Orthographic';
         }
+        
+        // Update projection matrix
+        updateProjectionMatrix(activeCamera);
+        
+        // Update input fields to show current camera values
+        updateInputValues();
+
+        // Notify about camera change
         notifyCameraChange(activeCamera);
-        ['x', 'y', 'z'].forEach(axis => {
-            positionInputs[axis].value = activeCamera.position[axis].toFixed(2);
-            rotationInputs[axis].value = THREE.MathUtils.radToDeg(activeCamera.rotation[axis]).toFixed(2);
-        });
     });
 
-    menuContainer.appendChild(positionInputs);
-    menuContainer.appendChild(rotationInputs);
     menuContainer.appendChild(cameraTypeToggle);
 
-    // Return a getter function to dynamically fetch the active camera
-    // Return both the getter and a way to subscribe to camera changes
-    return { 
+    // Initialize keyboard controls
+    const keyboardControls = initializeCameraKeyboardControls(() => activeCamera);
+
+    // Function to update input values based on camera position/rotation
+    function updateInputValues() {
+        ['x', 'y', 'z'].forEach(axis => {
+            // Update position inputs
+            if (positionInputs[axis]) {
+                positionInputs[axis].value = activeCamera.position[axis].toFixed(2);
+            }
+            
+            // Update rotation inputs
+            if (rotationInputs[axis]) {
+                rotationInputs[axis].value = THREE.MathUtils.radToDeg(activeCamera.rotation[axis]).toFixed(2);
+            }
+        });
+    }
+
+    // Update function to be called in animation loop
+    function update() {
+        // Update keyboard controls
+        const result = keyboardControls.update();
+        
+        // Update input values if camera moved
+        if (result && (result.positionChanged || result.rotationChanged)) {
+            updateInputValues();
+        }
+    }
+
+    // Return getter function to dynamically fetch the active camera
+    return {
         getActiveCamera: () => activeCamera,
         onCameraChange: (callback) => {
             cameraChangeCallbacks.push(callback);
+        },
+        update: () => {
+            // Update keyboard controls
+            const moved = keyboardControls.update();
+            
+            // Update input values to reflect camera position and 
+            if(moved) {
+                updateInputValues();
+            }
         }
     };
 }
@@ -81,21 +144,28 @@ function createDebouncedInputGroup(labelText, axes, onChange) {
     const group = document.createElement('div');
     const label = document.createElement('h4');
     label.textContent = labelText;
+    label.style.marginBottom = '8px';
     group.appendChild(label);
 
     const debouncedHandlers = {};
 
     axes.forEach((axis) => {
         const inputWrapper = document.createElement('div');
-        inputWrapper.style.marginBottom = '5px';
+        inputWrapper.style.marginBottom = '8px';
+        inputWrapper.style.display = 'flex';
+        inputWrapper.style.alignItems = 'center';
 
         const axisLabel = document.createElement('span');
         axisLabel.textContent = `${axis.toUpperCase()}: `;
+        axisLabel.style.width = '20px';
+        axisLabel.style.marginRight = '5px';
         inputWrapper.appendChild(axisLabel);
 
         const input = document.createElement('input');
         input.type = 'number';
-        input.style.width = '50px';
+        input.style.width = '70px';
+        input.style.padding = '3px';
+        input.dataset.axis = axis; // Add data attribute to identify axis
 
         // Debounce the input event
         input.addEventListener('input', (e) => {

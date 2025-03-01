@@ -197,11 +197,76 @@ export class AnimationManager {
     }
     
     updateAllObjects(time) {
-        // Update all animated objects at the given time
-        const objects = new Set(this.animations.map(a => a.object));
-        objects.forEach(obj => {
-            if (obj.update) {
-                obj.update(time);
+        // Helper function to calculate local time consistently
+        const getLocalTime = (anim, time) => {
+            if (this.loop && time > anim.endT) {
+                const duration = anim.endT - anim.startT;
+                const elapsed = time - anim.startT;
+                return anim.startT + (elapsed % duration);
+            }
+            return Math.min(Math.max(time, anim.startT), anim.endT);
+        };
+    
+        // Process each object with animations
+        const animatedObjects = new Set(this.animations.map(a => a.object));
+        
+        animatedObjects.forEach(obj => {
+            if (!obj || !obj.animations || obj.animations.length === 0) return;
+            
+            // Group animations by property
+            const animsByProperty = {
+                position: obj.animations.filter(a => a.property === 'position'),
+                rotation: obj.animations.filter(a => a.property === 'rotation'),
+                scale: obj.animations.filter(a => a.property === 'scale'),
+                color: obj.animations.filter(a => a.property === 'color')
+            };
+            
+            // Process position, rotation, scale animations (similar structure)
+            ['position', 'rotation', 'scale'].forEach(property => {
+                if (animsByProperty[property].length > 0) {
+                    animsByProperty[property].forEach(anim => {
+                        Object.keys(anim.functions).forEach(axis => {
+                            if (['x', 'y', 'z'].includes(axis)) {
+                                const { apply, params } = anim.functions[axis];
+                                const localTime = getLocalTime(anim, time);
+                                let value = apply(localTime, params);
+                                
+                                // Ensure scale doesn't go negative
+                                if (property === 'scale') {
+                                    value = Math.max(0.001, value);
+                                }
+                                
+                                obj[property][axis] = value;
+                            }
+                        });
+                    });
+                }
+            });
+            
+            // Process color animations (special case)
+            if (animsByProperty.color.length > 0 && obj.material && obj.material.color) {
+                const colorValues = { r: null, g: null, b: null };
+                
+                animsByProperty.color.forEach(anim => {
+                    Object.keys(anim.functions).forEach(channel => {
+                        if (['r', 'g', 'b'].includes(channel)) {
+                            const { apply, params } = anim.functions[channel];
+                            const localTime = getLocalTime(anim, time);
+                            
+                            // Get 0-255 value and clamp
+                            let colorValue = apply(localTime, params);
+                            colorValue = Math.max(0, Math.min(255, colorValue));
+                            
+                            // Convert to 0-1 for Three.js
+                            colorValues[channel] = colorValue / 255;
+                        }
+                    });
+                });
+                
+                // Apply color changes (only for channels that have animations)
+                if (colorValues.r !== null) obj.material.color.r = colorValues.r;
+                if (colorValues.g !== null) obj.material.color.g = colorValues.g;
+                if (colorValues.b !== null) obj.material.color.b = colorValues.b;
             }
         });
     }

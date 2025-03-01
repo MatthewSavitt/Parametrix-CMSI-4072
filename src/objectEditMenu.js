@@ -156,6 +156,18 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         selectedObject.scale.set(1, 1, 1);
         selectedObject.material.color.set(0x00ff00); // Reset color
 
+        // remove all animations from the object
+        if (animationManager && typeof animationManager.clearAnimations === 'function') {
+            animationManager.clearAnimations(selectedObject);
+        }
+        // Clear any existing animation path
+        if (selectedObject.animationPath) {
+            scene.remove(selectedObject.animationPath);
+            selectedObject.animationPath.geometry.dispose();
+            selectedObject.animationPath.material.dispose();
+            selectedObject.animationPath = null;
+        }
+
         clearOutline();
         renderer.render(scene, camera);
         hideContextMenu();
@@ -222,7 +234,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     rightColumn.appendChild(parametricControls);
 
     // Add collapsible submenus for position, rotation, and scale
-    const submenus = ['Position', 'Rotation', 'Scale'];
+    const submenus = ['Position', 'Rotation', 'Scale', 'Color'];
     submenus.forEach((property) => {
         const submenu = document.createElement('div');
         submenu.innerHTML = `<h5>${property} Functions</h5>`;
@@ -321,20 +333,25 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         
         // Add axis selection dropdown
         const axisLabel = document.createElement('div');
-        axisLabel.textContent = 'Apply to axis:';
+        axisLabel.textContent = property === 'Color' ? 'Apply to channel:' : 'Apply to axis:';
         axisLabel.style.marginTop = '5px';
         content.appendChild(axisLabel);
         
-        const axisSelect = document.createElement('select');
+        const axisSelect = document.createElement('select'); // Declare axisSelect in this scope
         axisSelect.style.width = '100%';
+        axisSelect.style.boxSizing = 'border-box';
         axisSelect.style.marginBottom = '5px';
-        ['x', 'y', 'z'].forEach((axis) => {
+        
+        // Use appropriate options based on property type
+        const options = property === 'Color' ? ['r', 'g', 'b'] : ['x', 'y', 'z'];
+        options.forEach(value => {
             const option = document.createElement('option');
-            option.value = axis;
-            option.textContent = axis.toUpperCase();
+            option.value = value;
+            option.textContent = value.toUpperCase();
             axisSelect.appendChild(option);
         });
         content.appendChild(axisSelect);
+    
     
         // Start and end times
         const timeRangeContainer = document.createElement('div');

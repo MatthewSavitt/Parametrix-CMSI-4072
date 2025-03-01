@@ -20,7 +20,7 @@ const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / wi
 perspectiveCamera.position.z = 5;
 
 // Initialize camera controls and getActiveCamera function
-const { getActiveCamera, onCameraChange } = createCameraControls(scene, renderer, perspectiveCamera);
+const { getActiveCamera, onCameraChange, update:updateCameraControls } = createCameraControls(scene, renderer, perspectiveCamera);
 
 // Pass a callback to be notified when camera changes
 onCameraChange((newCamera) => {
@@ -73,7 +73,8 @@ function animate() {
     
     // Update animation manager
     animManager.update(deltaTime);
-    
+    // Update camera controls
+    updateCameraControls();
     // Update camera controls
     const activeCamera = getActiveCamera();
     if (activeCamera.update) {
