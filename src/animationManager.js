@@ -147,6 +147,7 @@ export class AnimationManager {
         this.recalculateTimeRange();
     }
 
+    // Add this to your AnimationManager class:
     clearAnimations(object) {
         // Remove all animations for an object
         if (object.animations) {
@@ -155,8 +156,17 @@ export class AnimationManager {
         
         // Remove from global animations list
         this.animations = this.animations.filter(anim => anim.object !== object);
-
-        this.recalculateTimeRange();
+        
+        // Find and remove any paths associated with this object
+        if (this.scene) {
+            this.scene.traverse(obj => {
+                if (obj.isAnimationPath && obj.userData && obj.userData.targetObject === object.uuid) {
+                    this.scene.remove(obj);
+                    obj.geometry.dispose();
+                    obj.material.dispose();
+                }
+            });
+        }
     }
 
     recalculateTimeRange() {

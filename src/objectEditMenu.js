@@ -7,6 +7,10 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     let selectedObject = null;
     let outlineMesh = null;
     
+    const updateCamera = (newCamera) => {
+        camera = newCamera;
+    };
+
     // Ensure the global path visibility variable is set
     if (window.showAnimationPaths === undefined) {
         window.showAnimationPaths = true;
@@ -17,12 +21,16 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     contextMenu.id = 'contextMenu';
     contextMenu.style.position = 'absolute';
     contextMenu.style.display = 'none';
-    contextMenu.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-    contextMenu.style.padding = '10px';
-    contextMenu.style.borderRadius = '8px';
+    contextMenu.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+    contextMenu.style.padding = '15px';
+    contextMenu.style.borderRadius = '10px';
     contextMenu.style.zIndex = '1000';
     contextMenu.style.display = 'flex'; // Use flexbox for two columns
+    contextMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+    contextMenu.style.maxHeight = '80vh'; // Limit to 80% of viewport height
+    contextMenu.style.maxWidth = '90vw'; // Limit to 90% of viewport width
     document.body.appendChild(contextMenu);
+
 
     // Left column for position, rotation, scale, and color
     const leftColumn = document.createElement('div');
@@ -30,10 +38,41 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     leftColumn.style.marginRight = '10px'; // Add some spacing between columns
     contextMenu.appendChild(leftColumn);
 
-    // Right column for parametric function controls
+    // Right column for parametric function controls - improved scrolling
     const rightColumn = document.createElement('div');
     rightColumn.style.flex = '1';
+    rightColumn.style.maxHeight = '400px'; // Limit the maximum height
+    rightColumn.style.overflowY = 'auto'; // Make it scrollable vertically
+    rightColumn.style.overflowX = 'hidden'; // Prevent horizontal scrolling
+    rightColumn.style.paddingRight = '8px'; // Add some padding for the scrollbar
+    rightColumn.style.marginLeft = '10px'; // Add space between columns
+    rightColumn.style.width = '300px'; // Set a fixed width to prevent expanding
     contextMenu.appendChild(rightColumn);
+
+    // Add some CSS to make the scrollbar look nicer
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+        /* Scrollbar styling */
+        #contextMenu .scrollable-column::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        #contextMenu .scrollable-column::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        
+        #contextMenu .scrollable-column::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        
+        #contextMenu .scrollable-column::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    `;
+    document.head.appendChild(styleElement);
+    rightColumn.classList.add('scrollable-column');
 
     // Populate the left column with inputs for position, rotation, scale, and color
     const properties = ['Position', 'Rotation', 'Scale'];
@@ -128,8 +167,32 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     deleteButton.style.marginLeft = '0px';
     deleteButton.addEventListener('click', () => {
         if (!selectedObject) return;
-
+    
+        // Clean up animation path if it exists
+        if (selectedObject.animationPath) {
+            scene.remove(selectedObject.animationPath);
+            selectedObject.animationPath.geometry.dispose();
+            selectedObject.animationPath.material.dispose();
+            selectedObject.animationPath = null;
+        }
+        
+        // Find all animation paths associated with this object
+        scene.traverse(obj => {
+            if (obj.isAnimationPath && obj.userData && obj.userData.targetObject === selectedObject.uuid) {
+                scene.remove(obj);
+                obj.geometry.dispose();
+                obj.material.dispose();
+            }
+        });
+    
+        // Remove object from scene
         scene.remove(selectedObject);
+        
+        // Also remove from animation manager
+        if (animationManager && typeof animationManager.clearAnimations === 'function') {
+            animationManager.clearAnimations(selectedObject);
+        }
+        
         selectedObject = null;
         clearOutline();
         renderer.render(scene, camera);
@@ -146,9 +209,16 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     leftColumn.appendChild(resetButton);
     leftColumn.appendChild(deleteButton);
 
-    // Right column: Parametric function controls
+    // Add a heading to the right column
     const parametricControls = document.createElement('div');
     parametricControls.innerHTML = '<h4>Parametric Functions</h4>';
+    parametricControls.style.position = 'sticky'; // Keep the heading visible when scrolling
+    parametricControls.style.top = '0';
+    parametricControls.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    parametricControls.style.paddingBottom = '5px';
+    parametricControls.style.marginBottom = '5px';
+    parametricControls.style.borderBottom = '1px solid rgba(0, 0, 0, 0.1)';
+    parametricControls.style.zIndex = '1';
     rightColumn.appendChild(parametricControls);
 
     // Add collapsible submenus for position, rotation, and scale
@@ -190,13 +260,15 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         });
         content.appendChild(funcSelect);
         
-        // Function parameter editing
+        // Function parameter editing - constrain width
         const paramsContainer = document.createElement('div');
         paramsContainer.style.marginTop = '10px';
         paramsContainer.style.marginBottom = '10px';
         paramsContainer.style.padding = '8px';
         paramsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
         paramsContainer.style.borderRadius = '4px';
+        paramsContainer.style.width = '100%'; // Fill the container
+        paramsContainer.style.boxSizing = 'border-box'; // Include padding in width calculation
 
         const paramsHeading = document.createElement('div');
         paramsHeading.textContent = 'Function Parameters:';
@@ -204,6 +276,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         paramsHeading.style.marginBottom = '5px';
         paramsContainer.appendChild(paramsHeading);
 
+        
         const paramInputs = {};
         
         // Function to update parameter inputs when function changes
@@ -268,51 +341,67 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         timeRangeContainer.style.display = 'flex';
         timeRangeContainer.style.justifyContent = 'space-between';
         timeRangeContainer.style.marginTop = '10px';
-        
+        timeRangeContainer.style.width = '100%';
+        timeRangeContainer.style.boxSizing = 'border-box';
+
         const startContainer = document.createElement('div');
-        startContainer.style.flex = '1';
-        startContainer.style.marginRight = '5px';
+        startContainer.style.width = '48%'; // Slightly less than 50% to account for spacing
+        startContainer.style.boxSizing = 'border-box';        
+        
         const startLabel = document.createElement('div');
         startLabel.textContent = 'Start Time (s):';
         startLabel.style.fontSize = '12px';
+        startLabel.style.marginBottom = '3px';
+        startLabel.style.whiteSpace = 'nowrap';
         startContainer.appendChild(startLabel);
         
         const startInput = document.createElement('input');
         startInput.type = 'number';
         startInput.step = '0.1';
-        startInput.style.width = '100%';
+        startInput.style.width = '100%'; // Fill the container
+        startInput.style.boxSizing = 'border-box';
         startInput.value = '0'; // Default value
         startContainer.appendChild(startInput);
         
         const endContainer = document.createElement('div');
-        endContainer.style.flex = '1';
-        endContainer.style.marginLeft = '5px';
+        endContainer.style.width = '48%'; // Slightly less than 50% to account for spacing
+        endContainer.style.boxSizing = 'border-box';
+
         const endLabel = document.createElement('div');
         endLabel.textContent = 'End Time (s):';
         endLabel.style.fontSize = '12px';
+        endLabel.style.marginBottom = '3px';
+        endLabel.style.whiteSpace = 'nowrap';
         endContainer.appendChild(endLabel);
         
         const endInput = document.createElement('input');
         endInput.type = 'number';
         endInput.step = '0.1';
-        endInput.style.width = '100%';
+        endInput.style.width = '100%'; // Fill the container
+        endInput.style.boxSizing = 'border-box';
         endInput.value = '6.28'; // Default 2π
         endContainer.appendChild(endInput);
         
         timeRangeContainer.appendChild(startContainer);
         timeRangeContainer.appendChild(endContainer);
         content.appendChild(timeRangeContainer);
+
+        const samplesContainer = document.createElement('div');
+        samplesContainer.style.width = '100%';
+        samplesContainer.style.boxSizing = 'border-box';
+        samplesContainer.style.marginTop = '10px';
     
         // Number of samples (for visualization)
         const samplesLabel = document.createElement('div');
         samplesLabel.textContent = 'Visualization Samples:';
-        samplesLabel.style.marginTop = '10px';
         samplesLabel.style.fontSize = '12px';
-        content.appendChild(samplesLabel);
+        samplesLabel.style.marginBottom = '3px';
+        samplesContainer.appendChild(samplesLabel);
         
         const samplesInput = document.createElement('input');
         samplesInput.type = 'number';
         samplesInput.style.width = '100%';
+        samplesInput.style.boxSizing = 'border-box';
         samplesInput.value = '100'; // Default value
         content.appendChild(samplesInput);
     
@@ -680,39 +769,82 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     });
 
     // Show the context menu at the specified position
-    function showContextMenu(x, y) {
-        if (!selectedObject) return;
+// Show the context menu at the specified position
+function showContextMenu(x, y) {
+    if (!selectedObject) return;
 
-        contextMenu.style.display = 'flex'; // Use flexbox for two columns
-        contextMenu.style.left = `${x}px`;
-        contextMenu.style.top = `${y}px`;
-
-        // Adjust position if the menu overflows below the viewport
-        const rect = contextMenu.getBoundingClientRect();
-        const viewportHeight = window.innerHeight;
-
-        if (rect.bottom > viewportHeight) {
-            // Move the menu up to fit within the viewport
-            const overflow = rect.bottom - viewportHeight;
-            contextMenu.style.top = `${y - overflow}px`;
-        }
-
-        // Populate inputs
-        ['Position', 'Rotation', 'Scale'].forEach((property) => {
-            ['x', 'y', 'z'].forEach((axis) => {
-                const input = inputs[property][axis];
-                if (property === 'Position') input.value = selectedObject.position[axis].toFixed(2);
-                if (property === 'Rotation') input.value = THREE.MathUtils.radToDeg(selectedObject.rotation[axis]).toFixed(2);
-                if (property === 'Scale') input.value = selectedObject.scale[axis].toFixed(2);
-            });
-        });
-        
-        // Set color input value
-        if (selectedObject.material && selectedObject.material.color) {
-            const color = selectedObject.material.color;
-            colorInput.value = '#' + color.getHexString();
+    // First make the menu visible but with opacity 0 to measure its size
+    contextMenu.style.display = 'flex';
+    contextMenu.style.opacity = '0';
+    
+    // Get screen dimensions
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+    
+    // Get menu dimensions after rendering it (invisible)
+    const rect = contextMenu.getBoundingClientRect();
+    const menuWidth = rect.width;
+    const menuHeight = rect.height;
+    
+    // Calculate available space in each direction
+    const spaceRight = screenWidth - x;
+    const spaceLeft = x;
+    const spaceBottom = screenHeight - y;
+    const spaceTop = y;
+    
+    // Determine optimal position
+    let finalX = x;
+    let finalY = y;
+    
+    // X-axis positioning (horizontal)
+    if (spaceRight < menuWidth && spaceLeft > menuWidth) {
+        // Not enough space on the right, but enough on the left
+        finalX = x - menuWidth;
+    } else if (spaceRight < menuWidth && spaceLeft < menuWidth) {
+        // Not enough space on either side, position to minimize overflow
+        finalX = Math.max(10, x - Math.floor(menuWidth / 2));
+        // Ensure menu doesn't go beyond right edge
+        if (finalX + menuWidth > screenWidth - 10) {
+            finalX = screenWidth - menuWidth - 10;
         }
     }
+    
+    // Y-axis positioning (vertical)
+    if (spaceBottom < menuHeight && spaceTop > menuHeight) {
+        // Not enough space below, but enough above
+        finalY = y - menuHeight;
+    } else if (spaceBottom < menuHeight && spaceTop < menuHeight) {
+        // Not enough space either above or below, position to minimize overflow
+        finalY = Math.max(10, y - Math.floor(menuHeight / 2));
+        // Ensure menu doesn't go beyond bottom edge
+        if (finalY + menuHeight > screenHeight - 10) {
+            finalY = screenHeight - menuHeight - 10;
+        }
+    }
+    
+    // Apply the calculated position
+    contextMenu.style.left = `${finalX}px`;
+    contextMenu.style.top = `${finalY}px`;
+    
+    // Make the menu visible
+    contextMenu.style.opacity = '1';
+    
+    // Populate inputs
+    ['Position', 'Rotation', 'Scale'].forEach((property) => {
+        ['x', 'y', 'z'].forEach((axis) => {
+            const input = inputs[property][axis];
+            if (property === 'Position') input.value = selectedObject.position[axis].toFixed(2);
+            if (property === 'Rotation') input.value = THREE.MathUtils.radToDeg(selectedObject.rotation[axis]).toFixed(2);
+            if (property === 'Scale') input.value = selectedObject.scale[axis].toFixed(2);
+        });
+    });
+    
+    // Set color input value
+    if (selectedObject.material && selectedObject.material.color) {
+        const color = selectedObject.material.color;
+        colorInput.value = '#' + color.getHexString();
+    }
+}
 
     // Hide the context menu
     function hideContextMenu() {
@@ -729,6 +861,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
                 outlineMesh.scale.copy(selectedObject.scale).multiplyScalar(1.1);
             }
         },
-        hasActiveOutline: () => outlineMesh !== null
+        hasActiveOutline: () => outlineMesh !== null,
+        updateCamera // Add this method to update the camera reference
     };
 }

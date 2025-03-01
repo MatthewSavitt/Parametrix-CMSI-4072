@@ -3,15 +3,21 @@ import { createMenuTemplate } from './menuTemplate.js';
 
 export function createCameraControls(scene, renderer, initialCamera) {
     let activeCamera = initialCamera;
-
+    let cameraChangeCallbacks = [];
+    // Add a function to notify camera change
+    const notifyCameraChange = (camera) => {
+        cameraChangeCallbacks.forEach(callback => callback(camera));
+    };
     // Create orthographic camera
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    const orthographicSize = 5; // This controls the "zoom level"
     const orthographicCamera = new THREE.OrthographicCamera(
-        window.innerWidth / -100,
-        window.innerWidth / 100,
-        window.innerHeight / 100,
-        window.innerHeight / -100,
-        0.1,
-        1000
+        -orthographicSize * aspectRatio,  // left
+        orthographicSize * aspectRatio,   // right
+        orthographicSize,                 // top
+        -orthographicSize,                // bottom
+        0.1,                              // near
+        1000                              // far
     );
     orthographicCamera.position.z = 5;
 
@@ -39,14 +45,21 @@ export function createCameraControls(scene, renderer, initialCamera) {
     cameraTypeToggle.style.marginTop = '10px';
     cameraTypeToggle.addEventListener('click', () => {
         if (activeCamera.isPerspectiveCamera) {
+            orthographicCamera.position.copy(activeCamera.position);
+            orthographicCamera.rotation.copy(activeCamera.rotation);
             activeCamera = orthographicCamera;
-            activeCamera.position.z = 5;
             cameraTypeToggle.textContent = 'Switch to Perspective';
         } else {
+            initialCamera.position.copy(activeCamera.position);
+            initialCamera.rotation.copy(activeCamera.rotation);    
             activeCamera = initialCamera;
             cameraTypeToggle.textContent = 'Switch to Orthographic';
         }
-        updateProjectionMatrix(activeCamera);
+        notifyCameraChange(activeCamera);
+        ['x', 'y', 'z'].forEach(axis => {
+            positionInputs[axis].value = activeCamera.position[axis].toFixed(2);
+            rotationInputs[axis].value = THREE.MathUtils.radToDeg(activeCamera.rotation[axis]).toFixed(2);
+        });
     });
 
     menuContainer.appendChild(positionInputs);
@@ -54,7 +67,13 @@ export function createCameraControls(scene, renderer, initialCamera) {
     menuContainer.appendChild(cameraTypeToggle);
 
     // Return a getter function to dynamically fetch the active camera
-    return () => activeCamera;
+    // Return both the getter and a way to subscribe to camera changes
+    return { 
+        getActiveCamera: () => activeCamera,
+        onCameraChange: (callback) => {
+            cameraChangeCallbacks.push(callback);
+        }
+    };
 }
 
 // Create input group with debounce for controlling camera attributes
@@ -124,13 +143,16 @@ function smoothlyMoveCamera(camera, axis, targetValue, property) {
 
 // Update projection matrix for the current camera
 function updateProjectionMatrix(camera) {
+    const aspectRatio = window.innerWidth / window.innerHeight;
+    
     if (camera.isPerspectiveCamera) {
-        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.aspect = aspectRatio;
     } else if (camera.isOrthographicCamera) {
-        camera.left = window.innerWidth / -100;
-        camera.right = window.innerWidth / 100;
-        camera.top = window.innerHeight / 100;
-        camera.bottom = window.innerHeight / -100;
+        const orthographicSize = 5; // Keep this consistent with the initial value
+        camera.left = -orthographicSize * aspectRatio;
+        camera.right = orthographicSize * aspectRatio;
+        camera.top = orthographicSize;
+        camera.bottom = -orthographicSize;
     }
     camera.updateProjectionMatrix();
 }

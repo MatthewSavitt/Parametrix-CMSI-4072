@@ -1,6 +1,7 @@
 import { createMenuTemplate } from './menuTemplate.js';
 import { addObject } from './objectManager.js';
 import { createCube } from './objects.js';
+
 import * as THREE from './node_modules/three/build/three.module.js';
 
 export function createCubeMenu(scene) {

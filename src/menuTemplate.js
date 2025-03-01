@@ -1,3 +1,4 @@
+import { menuManager } from './menuManager.js'; // Adjust path as needed
 /**
  * Create a stylized menu container with a toggle button.
  * @param {string} emoji - The emoji used for the toggle button.
@@ -31,11 +32,14 @@ export function createMenuTemplate(emoji, top, left) {
 
     // Toggle menu visibility
     toggleButton.addEventListener('click', () => {
-        menuContainer.style.display = menuContainer.style.display === 'none' ? 'block' : 'none';
+        if (menuManager.isMenuActive(menuContainer)) {
+            menuManager.closeMenu();
+        } else {
+            menuManager.openMenu(menuContainer);
+        }
     });
 
     document.body.appendChild(toggleButton);
 
     return { menuContainer, toggleButton };
 }
-

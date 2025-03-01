@@ -20,7 +20,15 @@ const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / wi
 perspectiveCamera.position.z = 5;
 
 // Initialize camera controls and getActiveCamera function
-const getActiveCamera = createCameraControls(scene, renderer, perspectiveCamera);
+const { getActiveCamera, onCameraChange } = createCameraControls(scene, renderer, perspectiveCamera);
+
+// Pass a callback to be notified when camera changes
+onCameraChange((newCamera) => {
+    // Update the camera reference in object edit menu
+    if (objectEditor && objectEditor.updateCamera) {
+        objectEditor.updateCamera(newCamera);
+    }
+});
 
 // Initialize cube menu
 createCubeMenu(scene);
