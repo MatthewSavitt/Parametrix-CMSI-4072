@@ -1,5 +1,6 @@
 import * as THREE from './node_modules/three/build/three.module.js';
 import { parametricFunctions } from './parametricFunctions.js';
+import { applyHoverEffects } from './buttonHover.js';
 
 export function initializeObjectEditMenu(scene, camera, renderer, animationManager) {
     const raycaster = new THREE.Raycaster();
@@ -27,27 +28,28 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     contextMenu.style.zIndex = '1000';
     contextMenu.style.display = 'flex'; // Use flexbox for two columns
     contextMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-    contextMenu.style.maxHeight = '80vh'; // Limit to 80% of viewport height
-    contextMenu.style.maxWidth = '90vw'; // Limit to 90% of viewport width
+    contextMenu.style.maxHeight = '63vh'; // Limit to 63% of viewport height
+    contextMenu.style.maxWidth = '28vw'; // Limit to 90% of viewport width
     document.body.appendChild(contextMenu);
 
 
     // Left column for position, rotation, scale, and color
     const leftColumn = document.createElement('div');
     leftColumn.style.flex = '1';
-    leftColumn.style.marginRight = '10px'; // Add some spacing between columns
-    contextMenu.appendChild(leftColumn);
+    leftColumn.style.marginRight = '0px'; // Add some spacing between columns
+    leftColumn.style.maxWidth = '15%'; // Limit the maximum height
+
 
     // Right column for parametric function controls - improved scrolling
     const rightColumn = document.createElement('div');
     rightColumn.style.flex = '1';
-    rightColumn.style.maxHeight = '400px'; // Limit the maximum height
-    rightColumn.style.overflowY = 'auto'; // Make it scrollable vertically
+    rightColumn.style.maxHeight = '550px'; // Limit the maximum height
+    rightColumn.style.overflowY = 'auto'; // auto makes the scrollbar appear only when needed
     rightColumn.style.overflowX = 'hidden'; // Prevent horizontal scrolling
     rightColumn.style.paddingRight = '8px'; // Add some padding for the scrollbar
     rightColumn.style.marginLeft = '10px'; // Add space between columns
     rightColumn.style.width = '300px'; // Set a fixed width to prevent expanding
-    contextMenu.appendChild(rightColumn);
+
 
     // Add some CSS to make the scrollbar look nicer
     const styleElement = document.createElement('style');
@@ -75,12 +77,22 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     rightColumn.classList.add('scrollable-column');
 
     // Populate the left column with inputs for position, rotation, scale, and color
+    const header = document.createElement('h2');
+    const headerContainer = document.createElement('div');
+    headerContainer.style.display = 'flex';
+    headerContainer.style.justifyContent = 'center';
+    headerContainer.style.marginBottom = '266px';
+    headerContainer.style.marginTop = '0px';
+    headerContainer.appendChild(header);
+    header.textContent = 'Object Editor';
+    
     const properties = ['Position', 'Rotation', 'Scale'];
     const inputs = {};
     properties.forEach((property) => {
         const section = document.createElement('div');
         section.innerHTML = `<h4>${property}</h4>`;
-        section.style.marginBottom = '5px';
+        section.style.marginBottom = '15px';
+
 
         ['x', 'y', 'z'].forEach((axis) => {
             const wrapper = document.createElement('div');
@@ -106,10 +118,11 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         leftColumn.appendChild(section);
     });
 
-    // Add Color Picker
+    // Add Color Picker, space from bottom (rn it goes off the page a bit)
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
     colorInput.value = '#00ff00'; // Default color
+    //keep color input in context menu by at least 10px
     const colorLabel = document.createElement('h4');
     colorLabel.textContent = 'Color';
     leftColumn.appendChild(colorLabel);
@@ -141,12 +154,28 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         renderer.render(scene, camera);
         updateOutline(selectedObject); // Update the outline
     });
-    leftColumn.appendChild(applyButton);
+    
+    
 
     // Reset and Delete buttons
     const resetButton = document.createElement('button');
     resetButton.textContent = 'Reset';
     resetButton.style.marginTop = '10px';
+    resetButton.style.marginLeft = '0px';
+    resetButton.style.backgroundColor = 'blue';
+    resetButton.style.color = 'white';
+    resetButton.style.border = 'none';
+    resetButton.style.cursor = 'pointer';
+    resetButton.style.fontWeight = 'bold';
+    resetButton.style.fontSize = '16px';
+    resetButton.style.width = '100%';
+    resetButton.style.height = '100%';
+    resetButton.style.borderRadius = '5px';
+    resetButton.style.marginTop = '10px';
+    resetButton.style.marginLeft = '0px';
+    resetButton.style.width = '100%';
+    resetButton.style.height = '100%';
+
     resetButton.addEventListener('click', () => {
         if (!selectedObject) return;
 
@@ -177,6 +206,17 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     deleteButton.textContent = 'Delete';
     deleteButton.style.marginTop = '10px';
     deleteButton.style.marginLeft = '0px';
+    deleteButton.style.backgroundColor = 'red';
+    deleteButton.style.color = 'white';
+    deleteButton.style.border = 'none';
+    deleteButton.style.cursor = 'pointer';
+    deleteButton.style.fontWeight = 'bold';
+    deleteButton.style.fontSize = '16px';
+    deleteButton.style.marginTop = '10px';
+    deleteButton.style.marginLeft = '0px';
+    deleteButton.style.width = '100%';
+    deleteButton.style.height = '100%';
+    deleteButton.style.borderRadius = '5px';
     deleteButton.addEventListener('click', () => {
         if (!selectedObject) return;
     
@@ -210,28 +250,71 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         renderer.render(scene, camera);
         hideContextMenu();
     });
+    //add button hover effects
+    applyHoverEffects(applyButton);
+    applyHoverEffects(resetButton);
+    applyHoverEffects(deleteButton);
+    //make a underneath vertical division of 15% from beneath the rightcolumn and add apply reset and delete buttons to it
+    const buttonContainer = document.createElement('div');
+    
+    buttonContainer.appendChild(headerContainer);
+    buttonContainer.style.display = 'flex';
+    buttonContainer.style.flexDirection = 'column';
+    buttonContainer.style.justifyContent = 'space-between';
+    buttonContainer.style.height = '15%';
+    //make buttons start from the right of the container and take up 50% width
+    buttonContainer.style.width = '16%';
+    buttonContainer.style.marginTop = '10px'; //push to bottom
+    buttonContainer.style.paddingTop = '10px'
+    buttonContainer.style.marginLeft = 'auto';
+    buttonContainer.style.marginRight = '20px';
+    buttonContainer.style.position = 'relative';
+    buttonContainer.style.display = '0px';
+    buttonContainer.style.justifyContent = 'space-between';
+    //make the apply button green
+    applyButton.style.backgroundColor = 'green';
+    applyButton.style.color = 'white';
+    applyButton.style.border = 'none';
+    applyButton.style.cursor = 'pointer';
+    applyButton.style.fontWeight = 'bold';
+    applyButton.style.fontSize = '16px';
+    applyButton.style.marginTop = '10px';
+    applyButton.style.marginLeft = '0px';
+    applyButton.style.width = '100%';
+    applyButton.style.height = '100%';
+    applyButton.style.borderRadius = '5px';
+
+    buttonContainer.appendChild(deleteButton);
+    buttonContainer.appendChild(resetButton);
+    buttonContainer.appendChild(applyButton);
+    
 
     // Add hover effects for buttons
     resetButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x0000ff)); // Blue
     resetButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
 
+    applyButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x00ff00)); // Green
+    applyButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
+
     deleteButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0xff0000)); // Red
     deleteButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
 
-    leftColumn.appendChild(resetButton);
-    leftColumn.appendChild(deleteButton);
+
 
     // Add a heading to the right column
     const parametricControls = document.createElement('div');
     parametricControls.innerHTML = '<h4>Parametric Functions</h4>';
     parametricControls.style.position = 'sticky'; // Keep the heading visible when scrolling
     parametricControls.style.top = '0';
-    parametricControls.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    rightColumn.style.backgroundColor = 'rgba(255, 255, 255, 0.6)';   
     parametricControls.style.paddingBottom = '5px';
     parametricControls.style.marginBottom = '5px';
-    parametricControls.style.borderBottom = '1px solid rgba(0, 0, 0, 0.1)';
+   // parametricControls.style.borderBottom = '1px solid rgba(0, 0, 0, 0.1)';
     parametricControls.style.zIndex = '1';
     rightColumn.appendChild(parametricControls);
+    contextMenu.appendChild(buttonContainer);
+    contextMenu.appendChild(leftColumn);
+    contextMenu.appendChild(rightColumn);
 
     // Add collapsible submenus for position, rotation, and scale
     const submenus = ['Position', 'Rotation', 'Scale', 'Color'];
@@ -247,6 +330,22 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         toggleButton.addEventListener('click', () => {
             const content = submenu.querySelector('.submenu-content');
             content.style.display = content.style.display === 'none' ? 'block' : 'none';
+            //make content not appear over button container, but make it the button of the right column
+            content.style.bottom = '0';
+            content.style.left = '0';
+            content.style.right = '0';
+            content.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            content.style.padding = '10px';
+            content.style.borderRadius = '8px';
+            content.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+            content.style.zIndex = '1000';
+            content.style.maxWidth = '96.5%'; // Limit the maximum   
+            content.style.overflowY = 'auto';
+            content.style.overflowX = 'hidden';
+            content.style.width = '100%';
+            content.style.boxSizing = 'border-box';
+            content.style.paddingRight = '8px';
+            content.style.marginLeft = '10px';
         });
         submenu.appendChild(toggleButton);
     
@@ -277,6 +376,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         paramsContainer.style.marginTop = '10px';
         paramsContainer.style.marginBottom = '10px';
         paramsContainer.style.padding = '8px';
+        //the shading in Function Parameters:
         paramsContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
         paramsContainer.style.borderRadius = '4px';
         paramsContainer.style.width = '100%'; // Fill the container
@@ -308,9 +408,12 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
                 paramWrapper.style.display = 'flex';
                 paramWrapper.style.alignItems = 'center';
                 paramWrapper.style.marginBottom = '5px';
+                 
+                // const blurb = parametricFunctions[funcName].blurb[paramName] || '';
+                // const paramLabel = document.createElement('div');
                 
                 const paramLabel = document.createElement('div');
-                paramLabel.textContent = paramName + ':';
+                paramLabel.textContent = paramName + ':'; // + " (" + blurb + ")";
                 paramLabel.style.flex = '1';
                 paramLabel.style.fontSize = '12px';
                 paramWrapper.appendChild(paramLabel);
@@ -577,22 +680,13 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         let currentOpacity = 0.8;
         
         const pulsateInterval = setInterval(() => {
-            currentOpacity += 0.03 * pulsateDirection;
-            
-            if (currentOpacity >= 1) {
-                currentOpacity = 1;
-                pulsateDirection = -1;
-            } else if (currentOpacity <= 0.4) {
-                currentOpacity = 0.4;
-                pulsateDirection = 1;
+        //apply a sine function to the line's opacity
+            currentOpacity += 0.01 * pulsateDirection;
+            if (currentOpacity >= 1 || currentOpacity <= 0.5) {
+                pulsateDirection *= -1;
             }
-            
-            if (object.animationPath) {
-                object.animationPath.material.opacity = currentOpacity;
-            } else {
-                clearInterval(pulsateInterval);
-            }
-        }, 50);
+            line.material.opacity = Math.abs(Math.sin(currentOpacity));
+    }, 20);
         
         // Keep the path visible until the object is deselected or deleted
         object.onDeselect = () => {
@@ -606,6 +700,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         };
     }
 
+    
     // Function to redraw all animation paths
     function redrawAllAnimationPaths() {
         // Find all objects with animations
@@ -698,7 +793,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
             color: 0xffff00, 
             side: THREE.BackSide,
             transparent: true,
-            opacity: 0.8
+            opacity: 0.9
         });
         
         outlineMesh = new THREE.Mesh(outlineGeometry, outlineMaterial);

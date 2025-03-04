@@ -12,7 +12,9 @@ export function initializeCameraKeyboardControls(getActiveCamera) {
         s: false,
         d: false,
         q: false,
-        e: false
+        e: false,
+        f: false,
+        g: false,
     };
     
     // Mouse rotation tracking
@@ -21,7 +23,8 @@ export function initializeCameraKeyboardControls(getActiveCamera) {
     let lastMouseY = 0;
     
     // Set up event listeners for keyboard
-    document.addEventListener('keydown', (event) => {
+    document.addEventListener('keydown', (event) => { //how to make this work with home, since its not a letter?
+        // // Convert key to lowercase for consistency
         if (keys.hasOwnProperty(event.key.toLowerCase())) {
             keys[event.key.toLowerCase()] = true;
         }
@@ -61,8 +64,8 @@ export function initializeCameraKeyboardControls(getActiveCamera) {
             camera.rotation.y -= deltaX * rotateSpeed;
             camera.rotation.x -= deltaY * rotateSpeed;
             
-            // Clamp vertical rotation to avoid flipping
-            camera.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, camera.rotation.x));
+            // Clamp vertical rotation to avoid flipping (changed to 180degrees max and min)
+            camera.rotation.x = Math.max(-Math.PI, Math.min(Math.PI, camera.rotation.x));
             
             lastMouseX = event.clientX;
             lastMouseY = event.clientY;
@@ -88,6 +91,7 @@ export function initializeCameraKeyboardControls(getActiveCamera) {
         if (keys.s) { camera.position.addScaledVector(forward, -moveSpeed); moved = true; }
         if (keys.a) { camera.position.addScaledVector(right, -moveSpeed); moved = true; }
         if (keys.d) { camera.position.addScaledVector(right, moveSpeed); moved = true; }
+        if (keys.g) { () => { camera.position.setScaledVector(0, 0, 5); camera.rotation.setScaledVector(0, 0, 0); moved = true; } }
         
         // Apply roll rotation
         if (keys.q) { camera.rotation.z += 0.02; moved = true; }

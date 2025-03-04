@@ -22,14 +22,15 @@ export const parametricFunctions = {
         params: { a: 1, b: 0, c: 0, d: 0 },
     },
     bounce: {
-        apply: (t, { height, frequency, floor }) => {
-            const adjusted = t * frequency;
+        apply: (t, { height, frequency, floor, phase }) => {
+            t += phase;
+            const adjusted = t * ((frequency) / (Math.PI*2));
             const integer = Math.floor(adjusted);
             const fraction = adjusted - integer;
             // Parabolic arc for each bounce segment
             return height * 4 * fraction * (1 - fraction) + floor;
         },
-        params: { height: 1, frequency: 1, floor: 0 },
+        params: { height: 1, frequency: 1, floor: 0, phase: 0 },
     },
     // Add more functions as needed
 };
