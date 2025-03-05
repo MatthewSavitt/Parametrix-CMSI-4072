@@ -30,6 +30,10 @@ onCameraChange((newCamera) => {
     }
 });
 
+//disable scrolling the whole page on accident
+document.body.style.overflow = 'hidden';
+
+
 // Initialize cube menu
 createCubeMenu(scene);
 createSphereMenu(scene);

@@ -189,6 +189,10 @@ export class AnimationManager {
         this.loop = !this.loop;
     }
 
+    notLooping() {
+        return (!this.loop);
+    }
+
     setTime(time) {
         this.globalTime = time;
         
@@ -273,7 +277,17 @@ export class AnimationManager {
 
     update(deltaTime) {
         if (this.isPaused) return;
-        
+        const nextTime = this.globalTime + deltaTime;
+        if(this.notLooping() && nextTime > this.endTime) {
+            this.globalTime = this.endTime;
+            this.isPaused = true;
+
+            const event = new CustomEvent('animation-ended');
+            window.dispatchEvent(event);
+
+            this.updateAllObjects(this.globalTime);
+            return;
+        }
         this.globalTime += deltaTime;
         
         // Loop back to start if past end time

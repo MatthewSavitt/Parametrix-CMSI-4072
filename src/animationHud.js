@@ -21,6 +21,11 @@ export function createPlaybackHUD(animationManager, scene) {
     scrubberContainer.style.display = 'flex';
     scrubberContainer.style.alignItems = 'center';
     scrubberContainer.style.marginBottom = '10px';
+
+      // Add event listener for animation end
+    window.addEventListener('animation-ended', () => {
+    playPauseButton.textContent = 'Play';
+    });
     
     // Start time input (replacing the label)
     const startTimeInput = document.createElement('input');
@@ -79,12 +84,17 @@ export function createPlaybackHUD(animationManager, scene) {
     endTimeInput.style.textAlign = 'center';
     endTimeInput.addEventListener('input', () => {
         console.log("End time input changed to:", endTimeInput.value);
-        const newEndTime = parseFloat(endTimeInput.value);
+        const newEndTime = parseFloat(endTimeInput.value < startTimeInput.value ? startTimeInput.value : endTimeInput.value);
         if (!isNaN(newEndTime)) {
             animationManager.endTime = newEndTime;
             
             // Update scrubber max value
             scrubber.max = newEndTime;
+            if(animationManager.globalTime > newEndTime) {
+                animationManager.setTime(newEndTime);
+                scrubber.value = newEndTime;
+                timeDisplay.textContent = `Time: ${newEndTime.toFixed(2)}s`;
+            }
         }
     });
     scrubberContainer.appendChild(endTimeInput);
@@ -101,6 +111,12 @@ export function createPlaybackHUD(animationManager, scene) {
     playPauseButton.style.flex = '1';
     playPauseButton.style.marginRight = '5px';
     playPauseButton.addEventListener('click', () => {
+        if( animationManager.globalTime >= animationManager.endTime && !animationManager.loop) {
+            //had to change the referred animationmanager qualities directly... probably bad, might need to change later
+            animationManager.setTime(animationManager.startTime);
+            scrubber.value = animationManager.startTime;
+            timeDisplay.textContent = `Time: ${animationManager.startTime.toFixed(2)}s`;
+        }
         animationManager.togglePlayPause();
         playPauseButton.textContent = animationManager.isPaused ? 'Play' : 'Pause';
     });
@@ -168,6 +184,10 @@ export function createPlaybackHUD(animationManager, scene) {
     
     // Update the time display and scrubber every frame
     function updateHUD() {
+        // if ( scrubber.value >= scrubber.max && !animationManager.loop) {
+        //     playPauseButton.textContent = 'Play';
+        // }
+        
         if (!animationManager.isPaused) {
             timeDisplay.textContent = `Time: ${animationManager.globalTime.toFixed(2)}s`;
             scrubber.value = animationManager.globalTime;
@@ -175,12 +195,12 @@ export function createPlaybackHUD(animationManager, scene) {
         
         // Update input fields if timeline range changed externally
         if (Math.abs(parseFloat(startTimeInput.value) - animationManager.startTime) > 0.01) {
-            startTimeInput.value = animationManager.startTime.toFixed(1);
+            startTimeInput.value = animationManager.startTime.toFixed(2);
             scrubber.min = animationManager.startTime;
         }
         
         if (Math.abs(parseFloat(endTimeInput.value) - animationManager.endTime) > 0.01) {
-            endTimeInput.value = animationManager.endTime.toFixed(1);
+            endTimeInput.value = animationManager.endTime.toFixed(2);
             scrubber.max = animationManager.endTime;
         }
         

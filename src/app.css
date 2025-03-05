@@ -31,3 +31,11 @@ button {
 input, select, textarea {
   font-weight: 400;
 }
+
+/* make app start at very very top left corner*/
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}

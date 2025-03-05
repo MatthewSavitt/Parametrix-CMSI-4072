@@ -28,8 +28,8 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     contextMenu.style.zIndex = '1000';
     contextMenu.style.display = 'flex'; // Use flexbox for two columns
     contextMenu.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-    contextMenu.style.maxHeight = '63vh'; // Limit to 63% of viewport height
-    contextMenu.style.maxWidth = '28vw'; // Limit to 90% of viewport width
+    contextMenu.style.maxHeight = '100vh'; // Limit to 63% of viewport height
+    contextMenu.style.maxWidth = '100vw'; // Limit to 90% of viewport width
     document.body.appendChild(contextMenu);
 
 
@@ -37,7 +37,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     const leftColumn = document.createElement('div');
     leftColumn.style.flex = '1';
     leftColumn.style.marginRight = '0px'; // Add some spacing between columns
-    leftColumn.style.maxWidth = '15%'; // Limit the maximum height
+    leftColumn.style.maxWidth = '17%'; // Limit the maximum width
 
 
     // Right column for parametric function controls - improved scrolling
@@ -538,6 +538,8 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
             const axis = axisSelect.value;
             const startT = parseFloat(startInput.value);
             const endT = parseFloat(endInput.value);
+            // const startT = parseFloat(startInput.value).toFixed(2);
+            // const endT = parseFloat(endInput.value).toFixed(2);
             const numSamples = parseInt(samplesInput.value, 10);
 
             // Get custom parameter values from inputs
