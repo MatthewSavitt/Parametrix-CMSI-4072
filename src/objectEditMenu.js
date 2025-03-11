@@ -1,12 +1,26 @@
 import * as THREE from './node_modules/three/build/three.module.js';
 import { parametricFunctions } from './parametricFunctions.js';
 import { applyHoverEffects } from './buttonHover.js';
+import { isGizmo } from './threejs-gizmo.js';
+
+export function getSelectedObject() {
+    return selectedObject;
+}
+export function setSelectedObject(object) {
+    selectedObject = object;
+}
+
 
 export function initializeObjectEditMenu(scene, camera, renderer, animationManager) {
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
     let selectedObject = null;
     let outlineMesh = null;
+
+    // function to export the current selectedObject
+    function exportSelectedObject() {
+        return selectedObject;
+    }
     
     const updateCamera = (newCamera) => {
         camera = newCamera;
@@ -864,10 +878,10 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
 
             raycaster.setFromCamera(mouse, camera);
 
-            // Get intersected objects, excluding the outline mesh
+            // Get intersected objects, excluding the outline mesh or xyz axis thingy (gizmo)
             const intersects = raycaster.intersectObjects(
                 scene.children.filter((child) => {
-                    return child !== outlineMesh && !child.isAnimationPath;
+                    return !isGizmo(child) && child !== outlineMesh && !child.isAnimationPath;
                 })
             );
 
@@ -976,6 +990,15 @@ function showContextMenu(x, y) {
             }
         },
         hasActiveOutline: () => outlineMesh !== null,
-        updateCamera // Add this method to update the camera reference
+        updateCamera, // Add this method to update the camera reference
+        getSelectedObject: () => exportSelectedObject(), // Add this getter function
+        setSelectedObject: (obj) => {
+            selectedObject = obj;
+            if (selectedObject) {
+                updateOutline(selectedObject);
+            } else {
+                clearOutline();
+            }
+        },
     };
 }

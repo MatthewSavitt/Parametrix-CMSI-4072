@@ -2,12 +2,12 @@ import * as THREE from './node_modules/three/build/three.module.js';
 import { createCameraControls } from './cameraControls.js';
 import { createCubeMenu } from './cubeMenu.js';
 import { createSphereMenu } from './sphereMenu.js';
-import { initializeObjectEditMenu } from './objectEditMenu.js';
+import { initializeObjectEditMenu, getSelectedObject} from './objectEditMenu.js';
 // import animation manager
 import { AnimationManager } from './animationManager.js';
 import { createPlaybackHUD } from './animationHud.js';
 import { addObject, removeObject, getObjects } from './objectManager.js';
-
+import { createGizmo } from './threejs-gizmo.js';
 
 const scene = new THREE.Scene();
 const renderer = new THREE.WebGLRenderer();
@@ -16,12 +16,17 @@ const animManager = new AnimationManager(scene);
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
+// First create camera
 const perspectiveCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 perspectiveCamera.position.z = 5;
 
-// Initialize camera controls and getActiveCamera function
-const { getActiveCamera, onCameraChange, update:updateCameraControls } = createCameraControls(scene, renderer, perspectiveCamera);
+// Then initialize camera controls WITHOUT objectEditor 
+const cameraControls = createCameraControls(scene, renderer, perspectiveCamera);
+const { getActiveCamera, onCameraChange, update:updateCameraControls, setObjectEditor } = cameraControls;
 
+// NOW initialize objectEditor using getActiveCamera
+const objectEditor = initializeObjectEditMenu(scene, getActiveCamera(), renderer, animManager);
+window.selectedObjectEditor = objectEditor;
 // Pass a callback to be notified when camera changes
 onCameraChange((newCamera) => {
     // Update the camera reference in object edit menu
@@ -33,13 +38,16 @@ onCameraChange((newCamera) => {
 //disable scrolling the whole page on accident
 document.body.style.overflow = 'hidden';
 
+// add gizmo to scene 
+const boxWithGizmo = createGizmo();
+scene.add(boxWithGizmo);
 
 // Initialize cube menu
 createCubeMenu(scene);
 createSphereMenu(scene);
 // Initialize the animation HUD
 createPlaybackHUD(animManager, scene);
-const objectEditor = initializeObjectEditMenu(scene, getActiveCamera(), renderer, animManager);
+
 
 let lastTime = performance.now();
 

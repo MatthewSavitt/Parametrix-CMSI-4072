@@ -201,14 +201,13 @@ export class AnimationManager {
     }
     
     updateAllObjects(time) {
-        // Helper function to calculate local time consistently
-        const getLocalTime = (anim, time) => {
-            if (this.loop && time > anim.endT) {
-                const duration = anim.endT - anim.startT;
-                const elapsed = time - anim.startT;
-                return anim.startT + (elapsed % duration);
-            }
-            return Math.min(Math.max(time, anim.startT), anim.endT);
+        const getLocalTime = (anim, globalTime) => {
+        if (globalTime < anim.startT) {return anim.startT;
+        }
+        if (globalTime > anim.endT) {
+            return anim.endT;
+        }
+        return globalTime;
         };
     
         // Process each object with animations

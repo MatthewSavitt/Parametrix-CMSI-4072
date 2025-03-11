@@ -5,6 +5,11 @@ import { initializeCameraKeyboardControls } from './cameraKeyboardControls.js';
 export function createCameraControls(scene, renderer, initialCamera) {
     let activeCamera = initialCamera;
     let cameraChangeCallbacks = [];
+    let objectEditorRef = null;
+
+    function setObjectEditor(objectEditor) {
+        objectEditorRef = objectEditor;
+    }
     
     // Create orthographic camera
     const aspectRatio = window.innerWidth / window.innerHeight;
@@ -31,6 +36,7 @@ export function createCameraControls(scene, renderer, initialCamera) {
     // Create the menu template
     const { menuContainer } = createMenuTemplate('📷', 10, 10);
     document.body.appendChild(menuContainer);
+    menuContainer.style.width = '130px';
 
     // Add inputs for position
     const positionInputGroup = createDebouncedInputGroup('Position', ['x', 'y', 'z'], (axis, value) => {
@@ -92,8 +98,32 @@ export function createCameraControls(scene, renderer, initialCamera) {
 
     menuContainer.appendChild(cameraTypeToggle);
 
+    const resetCameraRotationButton = document.createElement('button');
+    resetCameraRotationButton.textContent = 'Reset Rotation';
+    resetCameraRotationButton.style.width = '100%';
+    resetCameraRotationButton.style.padding = '5px';
+    resetCameraRotationButton.addEventListener('click', () => {
+        smoothlyMoveCamera(activeCamera, 'x', 0, 'rotation', 200);
+        smoothlyMoveCamera(activeCamera, 'y', 0, 'rotation', 200);
+        smoothlyMoveCamera(activeCamera, 'z', 0, 'rotation', 200);
+        updateInputValues();
+    });
+    menuContainer.appendChild(resetCameraRotationButton);
+
+    const resetCameraPositionButton = document.createElement('button');
+    resetCameraPositionButton.textContent = 'Reset Position';
+    resetCameraPositionButton.style.width = '100%';
+    resetCameraPositionButton.style.padding = '5px';
+    resetCameraPositionButton.addEventListener('click', () => {
+        smoothlyMoveCamera(activeCamera, 'x', 0, 'position', 200);
+        smoothlyMoveCamera(activeCamera, 'y', 0, 'position', 200);
+        smoothlyMoveCamera(activeCamera, 'z', 5, 'position', 200);
+        updateInputValues();
+    });
+    menuContainer.appendChild(resetCameraPositionButton);
+    
     // Initialize keyboard controls
-    const keyboardControls = initializeCameraKeyboardControls(() => activeCamera);
+    const keyboardControls = initializeCameraKeyboardControls(() => activeCamera, () => objectEditorRef);
 
     // Function to update input values based on camera position/rotation
     function updateInputValues() {
@@ -124,6 +154,8 @@ export function createCameraControls(scene, renderer, initialCamera) {
     // Return getter function to dynamically fetch the active camera
     return {
         getActiveCamera: () => activeCamera,
+        smoothlyMoveCameraXYZ,
+        smoothlyLookAt,
         onCameraChange: (callback) => {
             cameraChangeCallbacks.push(callback);
         },
@@ -135,7 +167,8 @@ export function createCameraControls(scene, renderer, initialCamera) {
             if(moved) {
                 updateInputValues();
             }
-        }
+        },
+        setObjectEditor
     };
 }
 
@@ -190,8 +223,8 @@ function createDebouncedInputGroup(labelText, axes, onChange) {
 }
 
 // Smoothly move the camera to the target position or rotation
-function smoothlyMoveCamera(camera, axis, targetValue, property) {
-    const duration = 1000; // Duration of the transition in milliseconds
+export function smoothlyMoveCamera(camera, axis, targetValue, property, durationInput) { //optional duration parameter
+    const duration = durationInput ? durationInput : 1000; // Duration of the transition in milliseconds
     const startTime = performance.now();
     const startValue = camera[property][axis];
 
@@ -209,6 +242,69 @@ function smoothlyMoveCamera(camera, axis, targetValue, property) {
     }
 
     requestAnimationFrame(animate);
+}
+
+// Update smoothlyMoveCamera to return a Promise
+export function smoothlyMoveCameraXYZ(camera, targetPosition, durationInput = 1000) {
+    return new Promise((resolve) => {
+        const startTime = performance.now();
+        const startPosition = camera.position.clone();
+        
+        function animate(time) {
+            const elapsedTime = time - startTime;
+            const progress = Math.min(elapsedTime / durationInput, 1);
+            const easedProgress = easeInOutQuad(progress);
+
+            // Interpolate all three dimensions at once
+            camera.position.x = startPosition.x + (targetPosition.x - startPosition.x) * easedProgress;
+            camera.position.y = startPosition.y + (targetPosition.y - startPosition.y) * easedProgress;
+            camera.position.z = startPosition.z + (targetPosition.z - startPosition.z) * easedProgress;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                resolve(); // Resolve the promise when animation is complete
+            }
+        }
+
+        requestAnimationFrame(animate);
+    });
+}
+
+// Function to smoothly rotate the camera to look at a target
+export function smoothlyLookAt(camera, targetPosition, duration = 1000) {
+    return new Promise((resolve) => {
+        // Store the starting quaternion (current orientation)
+        const startQuaternion = camera.quaternion.clone();
+        // Create a temporary camera at the same position
+        const tempCamera = camera.clone();
+        // Reset rotation to ensure we're not inheriting any previous rotation
+        tempCamera.rotation.set(0, 0, 0); 
+        // Look directly at the target
+        tempCamera.lookAt(targetPosition);
+        // Get the resulting quaternion
+        const targetQuaternion = tempCamera.quaternion.clone();
+        const startTime = performance.now();
+        
+        function animate(time) {
+            const elapsedTime = time - startTime;
+            const progress = Math.min(elapsedTime / duration, 1);
+            const easedProgress = easeInOutQuad(progress);
+            
+            // Use the instance slerp method
+            camera.quaternion.copy(startQuaternion).slerp(targetQuaternion, easedProgress);
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Just to make absolutely sure we're looking at the target
+                camera.lookAt(targetPosition);
+                resolve();
+            }
+        }
+        
+        requestAnimationFrame(animate);
+    });
 }
 
 // Update projection matrix for the current camera

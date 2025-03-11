@@ -1,3 +1,6 @@
+
+//import gizmo
+import { hideGizmo } from './threejs-gizmo.js';
 export function createPlaybackHUD(animationManager, scene) {
     // Create a simple HUD for playback controls
     const hudContainer = document.createElement('div');
@@ -149,34 +152,95 @@ export function createPlaybackHUD(animationManager, scene) {
     pathToggleContainer.style.marginTop = '10px';
     pathToggleContainer.style.display = 'flex';
     pathToggleContainer.style.alignItems = 'center';
-    
+
+    // Create image container with text
+    const pathLabelContent = document.createElement('div');
+    pathLabelContent.style.display = 'flex';
+    pathLabelContent.style.alignItems = 'center';
+    pathLabelContent.style.marginRight = '10px';
+
+    // Create path icon image
+    const pathIcon = document.createElement('img');
+    pathIcon.src = '/../assets/paths.png';
+    pathIcon.width = 20;
+    pathIcon.height = 20;
+    pathIcon.style.marginRight = '5px';
+
+    // Create label text
     const pathToggleLabel = document.createElement('div');
     pathToggleLabel.textContent = 'Show Paths:';
-    pathToggleLabel.style.marginRight = '10px';
-    pathToggleContainer.appendChild(pathToggleLabel);
-    
+
+    // Assemble the label (icon + text)
+    pathLabelContent.appendChild(pathIcon);
+    pathLabelContent.appendChild(pathToggleLabel);
+
+    // Create checkbox
     const pathToggleCheckbox = document.createElement('input');
     pathToggleCheckbox.type = 'checkbox';
     pathToggleCheckbox.checked = true; // Default to showing paths
     pathToggleCheckbox.id = 'path-toggle';
+
+    // Add components to container in correct order
+    pathToggleContainer.appendChild(pathLabelContent);
     pathToggleContainer.appendChild(pathToggleCheckbox);
+    // Create gizmo toggle control
+    const gizmoToggleContainer = document.createElement('div');
+    gizmoToggleContainer.style.marginTop = '10px';
+    gizmoToggleContainer.style.display = 'flex';
+    gizmoToggleContainer.style.alignItems = 'center';
+    
+    const gizmoToggleCheckbox = document.createElement('input');
+    gizmoToggleCheckbox.type = 'checkbox';
+    gizmoToggleCheckbox.id = 'gizmo-toggle';
+    gizmoToggleCheckbox.checked = true; // Default to visible
+    
+    const gizmoToggleLabel = document.createElement('label');
+    gizmoToggleLabel.htmlFor = 'gizmo-toggle';
+    gizmoToggleLabel.textContent = 'Show Gizmo:';
+    gizmoToggleLabel.style.marginRight = '10px';
+    
+    gizmoToggleContainer.appendChild(gizmoToggleLabel);
+    gizmoToggleContainer.appendChild(gizmoToggleCheckbox);
     
     pathToggleCheckbox.addEventListener('change', () => {
         // Set global flag
         window.showAnimationPaths = pathToggleCheckbox.checked;
         
-        // Toggle visibility of all existing paths
+    // Toggle visibility of all existing paths
+    if (scene) {
+        scene.traverse(obj => {
+            if (obj.isAnimationPath) {
+                obj.visible = pathToggleCheckbox.checked;
+            }
+        });
+    }});
+    
+    gizmoToggleCheckbox.addEventListener('change', () => {
+        // Toggle visibility of all existing gizmos
         if (scene) {
             scene.traverse(obj => {
-                if (obj.isAnimationPath) {
-                    obj.visible = pathToggleCheckbox.checked;
+                if (obj.isGizmo) {
+                    hideGizmo(obj);
                 }
             });
         }
     });
-    
-    hudContainer.appendChild(pathToggleContainer);
-    
+    //div to set show path and show gizmo side by side
+    const toggleContainer = document.createElement('div');
+    toggleContainer.style.display = 'flex';
+    toggleContainer.style.justifyContent = 'space-between';
+    toggleContainer.appendChild(pathToggleContainer);
+    toggleContainer.appendChild(gizmoToggleContainer);
+    hudContainer.appendChild(toggleContainer);
+
+
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // gizmoToggleCheckbox.addEventListener('change', () => {
+    //     // use hideGizmo function to toggle visibility of gizmo
+    //     hideGizmo(gizmoToggleCheckbox.checked);
+    // });
+    // hudContainer.appendChild(gizmoToggleContainer);
+        
     // Set initial global state
     window.showAnimationPaths = true;
     

@@ -1,7 +1,6 @@
 import * as THREE from './node_modules/three/build/three.module.js';
-//import the selectedobject if it is currently selected
-//import { selectedObject } from './objectManager.js';
-export function initializeCameraKeyboardControls(getActiveCamera) {
+import { smoothlyMoveCamera } from './cameraControls.js';
+export function initializeCameraKeyboardControls(getActiveCamera, objectEditor) {
     // Movement speed and rotation sensitivity
     const moveSpeed = 0.1;
     const rotateSpeed = 0.007;
@@ -78,7 +77,7 @@ export function initializeCameraKeyboardControls(getActiveCamera) {
     
     // Update function to be called in animation loop
     function update() {
-        const camera = getActiveCamera();;
+        const camera = getActiveCamera();
         if (!camera) return false;
         let moved = false;
         if (isMouseRotating === true) {
@@ -89,20 +88,30 @@ export function initializeCameraKeyboardControls(getActiveCamera) {
         const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
         const right = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
         const up = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
-        
+        // create binding to selected object and outline
+        const selectedObject = window.selectedObjectEditor?.getSelectedObject() || null;
+        const hasActiveOutline = window.selectedObjectEditor?.hasActiveOutline() || false;
         // Apply movement based on keys
         if (keys.w) { camera.position.addScaledVector(forward, moveSpeed); moved = true; }
         if (keys.s) { camera.position.addScaledVector(forward, -moveSpeed); moved = true; }
         if (keys.a) { camera.position.addScaledVector(right, -moveSpeed); moved = true; }
         if (keys.d) { camera.position.addScaledVector(right, moveSpeed); moved = true; }
-        if (keys.g) { () => { camera.position.setScaledVector(0, 0, 5); camera.rotation.setScaledVector(0, 0, 0); moved = true; } }
+        if (keys.g) {  }
         if (keys.z) { camera.position.addScaledVector(up, -moveSpeed); moved = true; }
         if (keys.x) { camera.position.addScaledVector(up, moveSpeed); moved = true; }
-        // if (selectedObject && keys.f) { 
-        //     camera.position.copy(selectedObject.position -(forward.multiplyScalar(5)));
-        //     moved = true;
-        //     camera.lookAt(selectedObject.position);
-        // }
+        // Follow selected object
+        if (keys.f) {
+            // Get the currently selected object
+            if (selectedObject /**&& hasActiveOutline*/) { // Ensure an object is selected, for some reason with the outline check commented it still can focus the previously selected object even if the object edit menu is closed. it's not a bug, it's a feature! :)
+                console.log("Following selected object:", selectedObject);
+                //just make x and y change not z 
+                camera.position.set(selectedObject.position.x, selectedObject.position.y);
+                camera.lookAt(selectedObject.position);
+                moved = true;
+            } else {
+                console.log("No object selected. Ignoring F key.");
+            }
+        }
         
         // Apply roll rotation
         if (keys.q) { camera.rotation.z += 0.02; moved = true; }
