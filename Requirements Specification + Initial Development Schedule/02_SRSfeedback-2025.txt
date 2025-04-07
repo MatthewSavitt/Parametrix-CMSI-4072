@@ -2,7 +2,7 @@
 New Individual Project
 Documentation Feedback ~ Deliverable #2
 Software Requirements Specification &
-Initial Development Schedule
+   Initial Development Schedule
 CMSI 4072 Spring 2025
 =======================================
 
@@ -50,3 +50,21 @@ OVERALL ASSESSMENT:
    Total Percentage:   10/10 = 100% which is an A-plus
 
 Good work, as always, Matthew!
+
+----------------------------------------------------------------------------
+\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
+/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\
+----------------------------------------------------------------------------
+
+Documentation Feedback ~ Deliverable #5
+Software Requirements Specification Complete
+============================================
+
+OVERALL ASSESSMENT:
+           Category                                Points
+   Comments from first submission incorporated       8/8
+   Spelling and Grammar in document acceptable       2/2
+                                                   =====
+   Subtotal                                        10/10
+   ------------------------------------------------------
+   Total Percentage:   10/10 = 100% which is an A-plus

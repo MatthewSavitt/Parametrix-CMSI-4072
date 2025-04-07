@@ -1,0 +1,50 @@
+
+Evaluation and Feedback
+CMSI 4072 project ~ Spring 2023
+Evaluation for homework03
+====================================
+
+7-1  Fix comments for Euclid's Algorithm        4 out of 5 points
+7-2  Two conditions for bad comments            4 out of 4 points
+7-4  Apply offensive programming ex.3           5 out of 5 points
+7-5  Should you add error handling?             4 out of 4 points
+7-7  Top-down drive to market / assumptions     4 out of 5 points
+8-1  Implementation of IsRelativelyPrime        5 out of 5 points
+8-3  Which testing methods used in 8-1 [gimme]  5 out of 5 points
+8-5  Implementation of AreRelativelyPrime       4 out of 4 points
+8-9  Exhaustive is black/white/gray & why       3 out of 4 points
+8-11 Lincoln estimate / number bugs             3 out of 5 points
+8-12 Lincoln estimate no common bugs            4 out of 4 points
+
+Total possible score: 50 points
+============================================================================
+
+Your score: 45 out of 50 = 90% which is an A-minus
+
+Comments/feedback:
+
+problem 7-1, all you need to do is include a link to the wikipedia page, and
+   then you can delete all the rest of the comments which become redundant.
+
+problem 7-7, this was supposed to be a bit more than two steps.  Like, get
+   in the car, put the key in the ignition, start the car, turn left, right,
+   or whatever, park at the store, etc.
+
+problem 8-9, you make a case for white box testing, but exhaustive testing
+   really only needs to be black box; you are testing every possible input
+   to the function and you don't really need to know how it works, just what
+   the matching outputs should be.
+
+problem 8-11, the Lincoln index works on PAIRS, so you have three different
+   calculations that must be averaged:
+
+      Testing the three different Lincoln indexes:
+      Alice/Bob 5*4/2 =10
+      Alice/Carmen 5*5/2 = 12.5
+      Bob/Carmen 4*5/1 = 20
+      To estimate the bug you could take the average of the three.
+      In this case, there are 14 bugs.
+
+Very nice work on this, Matt!
+You earned 09% of 11 points which is 9.9 extra credit points.
+

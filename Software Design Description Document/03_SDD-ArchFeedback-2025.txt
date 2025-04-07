@@ -1,0 +1,43 @@
+
+New Individual Project
+Documentation Feedback ~ Deliverable #3
+Software Design Document ~ Architecture
+CMSI 4072 Spring 2025
+=======================================
+
+SDD: ARCHITECTURAL DESIGN SECTION:
+   Major software components section
+      Nice work on this section.  Very clean!
+
+   Major software interactions section
+      Good work here, too ~ the interactions are well-defined.
+
+   Architectural design diagrams section
+      You did a professional job on the other two sections, so you should
+      follow that in the design diagrams by using a 'real' drawing tool.  It
+      looks like you used Squibble to do the diagrams, which I understand,
+      but it doesn't look like professional-quality documentation and that
+      detracts from the overall effect.
+
+OVERALL ASSESSMENT:
+   Category                           Points
+   --------------------------------   -------
+   ARCHITECTURAL DESIGN SECTION:
+   Major software components            2 / 2
+   Major software interactions          2 / 2
+   Architectural design diagrams        5 / 6
+                                      =======
+   Subtotal                             9 /10
+   ------------------------------------------------------
+   Total Percentage:  9/10 = 90% which is an A-minus
+
+============================================================================
+COMMENTS:
+---------
+
+Really nice work on this, Matt, but you really should fix those diagrams.
+
+Looks like you did the detailed design part as well, or at least got a good
+start on it.  You'll be ready for the next deliverable submission!
+
+Keep up the good work!
