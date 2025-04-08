@@ -9,11 +9,14 @@
    git clone <repository-url>
    ```
 2. Navigate to the root directory and install dependencies:
-  ```
-  npm install
-  ```
+   ```
+   npm install
+   ```
 3.Start the application:
-  
-  ```
-  npm start
-  ```
+   ```
+   npm start
+   ```
+
+
+## Credits
+Code by Matthew Savitt :D
