@@ -54,7 +54,7 @@ export function applyHoverEffects(button, options = {}) {
         button.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.2)';
     });
     
-    // Prevent focus outline (optional, but common for custom-styled buttons)
+    // Prevent focus outline (optional)
     button.style.outline = 'none';
     
     // Handle focus state for accessibility (keyboard navigation)

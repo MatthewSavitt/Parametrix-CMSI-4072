@@ -9,7 +9,6 @@ export class AnimationManager {
         this.endTime = 6.28; // End time for the animation
     }
 
-
     addAnimation(object, animationConfig) {
         // Update start/end times of the timeline if needed
         this.startTime = Math.min(this.startTime, animationConfig.startT);
@@ -272,6 +271,11 @@ export class AnimationManager {
                 if (colorValues.b !== null) obj.material.color.b = colorValues.b;
             }
         });
+    }
+
+    getAnimationsForObject(object) {
+        // Return all animations associated with this object
+        return this.animations.filter(anim => anim.object === object);
     }
 
     update(deltaTime) {

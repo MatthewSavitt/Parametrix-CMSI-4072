@@ -95,7 +95,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     const headerContainer = document.createElement('div');
     headerContainer.style.display = 'flex';
     headerContainer.style.justifyContent = 'center';
-    headerContainer.style.marginBottom = '266px';
+    headerContainer.style.marginBottom = '245px';
     headerContainer.style.marginTop = '0px';
     headerContainer.appendChild(header);
     header.textContent = 'Object Editor';
@@ -132,7 +132,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         leftColumn.appendChild(section);
     });
 
-    // Add Color Picker, space from bottom (rn it goes off the page a bit)
+    // Add Color Picker, space from bottom
     const colorInput = document.createElement('input');
     colorInput.type = 'color';
     colorInput.value = '#00ff00'; // Default color
@@ -148,7 +148,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     applyButton.style.marginTop = '10px';
     applyButton.addEventListener('click', () => {
         if (!selectedObject) return;
-
+        const originalPosition = selectedObject.position.clone();
         const position = {};
         const rotation = {};
         const scale = {};
@@ -164,6 +164,41 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         selectedObject.rotation.set(rotation.x, rotation.y, rotation.z);
         selectedObject.scale.set(scale.x, scale.y, scale.z);
         selectedObject.material.color.set(color);
+
+        // Check if position changed
+        const positionChanged = (
+        originalPosition.x !== selectedObject.position.x ||
+        originalPosition.y !== selectedObject.position.y ||
+        originalPosition.z !== selectedObject.position.z
+     );
+        // If position changed and this object has position animations, update the animation path
+    if (positionChanged && selectedObject.animations) {
+        const hasPositionAnimations = selectedObject.animations.some(anim => anim.property === 'position');
+        
+        if (hasPositionAnimations) {
+            console.log("Position changed with animations - updating path");
+            
+            // Remove existing animation path
+            if (selectedObject.animationPath) {
+                scene.remove(selectedObject.animationPath);
+                selectedObject.animationPath.geometry.dispose();
+                selectedObject.animationPath.material.dispose();
+                selectedObject.animationPath = null;
+            }
+            
+            // Find all paths associated with this object
+            scene.traverse(obj => {
+                if (obj.isAnimationPath && obj.userData && obj.userData.targetObject === selectedObject.uuid) {
+                    scene.remove(obj);
+                    obj.geometry.dispose();
+                    obj.material.dispose();
+                }
+            });
+            
+            // Redraw all animation paths
+            redrawAllAnimationPaths();
+        }
+    }
 
         renderer.render(scene, camera);
         updateOutline(selectedObject); // Update the outline
@@ -264,10 +299,135 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         renderer.render(scene, camera);
         hideContextMenu();
     });
+
+    //duplicate button
+    const deepDuplicateButton = document.createElement('button');
+    deepDuplicateButton.textContent = 'Duplicate';
+    deepDuplicateButton.style.backgroundColor = '#993399';
+    deepDuplicateButton.style.color = 'white';
+    deepDuplicateButton.style.border = 'none';
+    deepDuplicateButton.style.cursor = 'pointer';
+    deepDuplicateButton.style.fontWeight = 'bold';
+    deepDuplicateButton.style.fontSize = '16px';
+    deepDuplicateButton.style.marginTop = '10px';
+    deepDuplicateButton.style.marginLeft = '0px';
+    deepDuplicateButton.style.width = '100%';
+    deepDuplicateButton.style.height = '100%';
+    deepDuplicateButton.style.borderRadius = '5px';
+    deepDuplicateButton.addEventListener('click', () => {
+        if (!selectedObject) return;
+        console.log("Starting dupe of:", selectedObject);
+        // STEP 1: Create a clean base clone with new geometries and materials
+        // --------------------------------------------------------------------
+        const geometry = selectedObject.geometry.clone();
+        const material = selectedObject.material.clone();
+        if (material.color) {
+            material.color = new THREE.Color(selectedObject.material.color.getHex());
+        }
+        // Create a completely new mesh with the cloned geometry and material
+        const clonedObject = new THREE.Mesh(geometry, material);
+        // Generate a new UUID
+        clonedObject.uuid = THREE.MathUtils.generateUUID();
+        // Copy transform properties
+        clonedObject.position.copy(selectedObject.position);
+        clonedObject.rotation.copy(selectedObject.rotation);
+        clonedObject.scale.copy(selectedObject.scale);
+        clonedObject.animations = [];
+        scene.add(clonedObject);
+        // STEP 2: Recreate all animations from scratch
+        // --------------------------------------------------------------------
+        console.log(`Original object has ${selectedObject.animations ? selectedObject.animations.length : 0} animations`);
+        if (selectedObject.animations && selectedObject.animations.length > 0) {
+            // Process each animation
+            selectedObject.animations.forEach(origAnim => {
+                if (!origAnim || !origAnim.property || !origAnim.axis || !origAnim.functions) {
+                    console.warn("Skipping invalid animation:", origAnim);
+                    return;
+                }
+                const property = origAnim.property;
+                const axis = origAnim.axis;
+                // Extract function definitions for this axis
+                const axisFunctions = origAnim.functions[axis];
+                if (!axisFunctions || !axisFunctions.apply) {
+                    console.warn(`Missing function for ${property}.${axis}`);
+                    return;
+                }
+                // Get the function name - handle case where it might be missing
+                let funcName = axisFunctions.functionName;
+                // If functionName is missing (especially for color animations),
+                // try to identify the function by comparing against known parametric functions
+                if (!funcName) {
+                    // Try to identify the function by its apply method
+                    const applyFunc = axisFunctions.apply.toString();
+                    for (const name in parametricFunctions) {
+                        if (parametricFunctions[name].apply.toString() === applyFunc) {
+                            funcName = name;
+                            console.log(`Identified missing function name as "${funcName}"`);
+                            break;
+                        }
+                    }
+                    // If still not found, use default function (usually sine wave)
+                    if (!funcName) {
+                        funcName = 'sineWave';
+                        console.warn(`Could not identify function for ${property}.${axis}, using sineWave as fallback`);
+                    }
+                }
+                // Make sure the parametric function exists
+                if (!parametricFunctions[funcName]) {
+                    console.warn(`Function ${funcName} not found in parametricFunctions`);
+                    return;
+                }
+                // Create a completely new params object
+                const newParams = {};
+                if (axisFunctions.params) {
+                    Object.keys(axisFunctions.params).forEach(paramName => {
+                        newParams[paramName] = axisFunctions.params[paramName];
+                    });
+                } else {
+                    // Fall back to default params
+                    Object.assign(newParams, parametricFunctions[funcName].params);
+                }
+                // Create a new animation configuration
+                const newAnimConfig = {
+                    property: property,
+                    axis: axis,
+                    startT: origAnim.startT || 0,
+                    endT: origAnim.endT || 6.28,
+                    loop: origAnim.loop !== undefined ? origAnim.loop : true,
+                    functions: {
+                        [axis]: {
+                            apply: parametricFunctions[funcName].apply,
+                            params: newParams,
+                            functionName: funcName
+                        }
+                    }
+                };
+                console.log(`Adding ${funcName} animation for ${property}.${axis}`, newParams);
+                
+                // Add the animation to the animation manager
+                animationManager.addAnimation(clonedObject, newAnimConfig);
+            });
+        }
+        // STEP 3: Redraw animation paths if needed
+        // --------------------------------------------------------------------
+        if (window.showAnimationPaths !== false) {
+            redrawAllAnimationPaths();
+        }
+        // STEP 4: Select the cloned object
+        // --------------------------------------------------------------------
+        selectedObject = clonedObject;
+        clearOutline();
+        updateOutline(selectedObject);
+        renderer.render(scene, camera);
+        console.log(`Cloned object now has ${clonedObject.animations ? clonedObject.animations.length : 0} animations`);
+        console.log("Deep duplication complete with color animation support!");
+    });
     //add button hover effects
+    applyHoverEffects(deepDuplicateButton);
     applyHoverEffects(applyButton);
     applyHoverEffects(resetButton);
     applyHoverEffects(deleteButton);
+
     //make a underneath vertical division of 15% from beneath the rightcolumn and add apply reset and delete buttons to it
     const buttonContainer = document.createElement('div');
     
@@ -301,18 +461,21 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     buttonContainer.appendChild(deleteButton);
     buttonContainer.appendChild(resetButton);
     buttonContainer.appendChild(applyButton);
+    buttonContainer.appendChild(deepDuplicateButton);
     
 
     // Add hover effects for buttons
     resetButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x0000ff)); // Blue
     resetButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
 
-    applyButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x00ff00)); // Green
+    applyButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x009300)); // Green
     applyButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
 
     deleteButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0xff0000)); // Red
     deleteButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
 
+    deepDuplicateButton.addEventListener('mouseenter', () => animateOutlineColor(selectedObject, 0x993399)); // medium moderate magenta
+    deepDuplicateButton.addEventListener('mouseleave', () => animateOutlineColor(selectedObject, 0xffff00)); // Yellow
 
 
     // Add a heading to the right column

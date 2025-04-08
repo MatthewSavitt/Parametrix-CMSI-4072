@@ -32,5 +32,32 @@ export const parametricFunctions = {
         },
         params: { height: 1, frequency: 1, floor: 0, phase: 0 },
     },
+    fourierSeries: {
+        apply: (t, { amplitude1, frequency1, phase1, amplitude2, frequency2, phase2 }) => {
+            //fourier series
+            const sine1 = amplitude1 * Math.sin(frequency1 * t + phase1);
+            const sine2 = amplitude2 * Math.sin(frequency2 * t + phase2);
+            return sine1 + sine2;
+
+        },
+        params: { amplitude1: 1, frequency1: 1, phase1: 0, amplitude2: 1, frequency2: 1, phase2: 0 },
+    },
+    squareWave: {
+        apply: (t, { amplitude, frequency, phase, verticalShift }) => {
+            const period = 1 / frequency;
+            const halfPeriod = period / 2;
+            const adjustedT = (t + phase) % period;
+            return adjustedT < halfPeriod ? amplitude + verticalShift : -amplitude + verticalShift;
+        },
+        params: { amplitude: 1, frequency: 1, phase: 0, verticalShift: 0 },
+    },
+    sawtoothWave: {
+        apply: (t, { amplitude, frequency, phase, verticalShift }) => {
+            const period = 1 / frequency;
+            const adjustedT = (t + phase) % period;
+            return ((2 * amplitude) / period) * adjustedT - amplitude + verticalShift;
+        },
+        params: { amplitude: 1, frequency: 1, phase: 0, verticalShift: 0 },
+    },
     // Add more functions as needed
 };
