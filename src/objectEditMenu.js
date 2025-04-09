@@ -704,6 +704,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     
         // Apply button for parametric function
         const applyParametricButton = document.createElement('button');
+        applyHoverEffects(applyParametricButton);
         applyParametricButton.textContent = `Apply to ${property}`;
         applyParametricButton.style.width = '100%';
         applyParametricButton.style.marginTop = '10px';

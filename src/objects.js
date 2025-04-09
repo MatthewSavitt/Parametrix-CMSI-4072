@@ -81,11 +81,15 @@ export function createCone(options) {
  * @returns {THREE.Mesh} The created torus.
  */
 export function createTorus(options) {
+    // If tubeRadius is provided, use that for the tube parameter
+    const tubeRadius = options.tubeRadius !== undefined ? options.tubeRadius : (options.tube || 0.4);
+    
     return createObject(() => new THREE.TorusGeometry(
         options.radius || 1, 
-        options.tube || 0.4, 
+        tubeRadius,
         options.radialSegments || 16, 
-        options.tubularSegments || 100
+        options.tubularSegments || 100,
+        options.arc || Math.PI * 2
     ), options);
 }
 /**

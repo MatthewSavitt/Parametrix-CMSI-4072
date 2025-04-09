@@ -1,7 +1,7 @@
 import { createMenuTemplate } from './menuTemplate.js';
 import { addObject } from './objectManager.js';
 import { createCube } from './objects.js';
-
+import { applyHoverEffects } from './buttonHover.js';
 import * as THREE from './node_modules/three/build/three.module.js';
 
 export function createCubeMenu(scene) {
@@ -49,8 +49,17 @@ export function createCubeMenu(scene) {
 
     // Add Cube Button
     const addButton = document.createElement('button');
+    addButton.style.width = '100%';
+    addButton.style.padding = '8px';
+    addButton.style.marginTop = '5px';
+    addButton.style.backgroundColor = '#4CAF50';
+    addButton.style.color = 'white';
+    addButton.style.border = 'none';
+    addButton.style.borderRadius = '4px';
+    addButton.style.cursor = 'pointer';
     addButton.textContent = 'Add Cube';
     addButton.style.marginTop = '10px';
+    applyHoverEffects(addButton);
     addButton.addEventListener('click', () => {
         const position = {
             x: parseFloat(inputs['Position'].x.value),

@@ -2,6 +2,10 @@ import * as THREE from './node_modules/three/build/three.module.js';
 import { createCameraControls } from './cameraControls.js';
 import { createCubeMenu } from './cubeMenu.js';
 import { createSphereMenu } from './sphereMenu.js';
+import { createTorusMenu } from './torusMenu.js';
+import { createConeMenu } from './coneMenu.js';
+//import { cylinderMenu } from './cylinderMenu.js';
+//import { createCustomObjectMenu } from './customObjectMenu.js';
 import { initializeObjectEditMenu, getSelectedObject} from './objectEditMenu.js';
 // import animation manager
 import { AnimationManager } from './animationManager.js';
@@ -45,6 +49,9 @@ scene.add(boxWithGizmo);
 // Initialize cube menu
 createCubeMenu(scene);
 createSphereMenu(scene);
+createTorusMenu(scene);
+createConeMenu(scene);
+//createCustomObjectMenu(scene);
 // Initialize the animation HUD
 createPlaybackHUD(animManager, scene);
 
