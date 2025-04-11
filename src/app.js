@@ -4,7 +4,7 @@ import { createCubeMenu } from './cubeMenu.js';
 import { createSphereMenu } from './sphereMenu.js';
 import { createTorusMenu } from './torusMenu.js';
 import { createConeMenu } from './coneMenu.js';
-//import { cylinderMenu } from './cylinderMenu.js';
+import { createCylinderMenu } from './cylinderMenu.js';
 //import { createCustomObjectMenu } from './customObjectMenu.js';
 import { initializeObjectEditMenu, getSelectedObject} from './objectEditMenu.js';
 // import animation manager
@@ -51,6 +51,7 @@ createCubeMenu(scene);
 createSphereMenu(scene);
 createTorusMenu(scene);
 createConeMenu(scene);
+createCylinderMenu(scene);
 //createCustomObjectMenu(scene);
 // Initialize the animation HUD
 createPlaybackHUD(animManager, scene);
