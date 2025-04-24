@@ -19,4 +19,4 @@
 
 
 ## Credits
-Code by Matthew Savitt :D, open source or whatever
+Code by Matthew Savitt :D, open source or whatever.
