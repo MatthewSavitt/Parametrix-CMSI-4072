@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <link rel="stylesheet" href="app.css">
+<head>
+    <meta charset="UTF-8">
+    <title>Parametrix beta 1.0</title>
+    <style>
+        /* CSS for the context menu */
+        #contextMenu {
+            display: none;
+            position: absolute;
+            background-color: white;
+            border: 1px solid gray;
+            padding: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            z-index: 10; /* Make sure the menu is above other elements */
+        }
+    </style>
+</head>
+<body>
+    <div id="contextMenu">
+        <label>Position: <input type="text" id="positionInput"></label><br>
+        <label>Scale: <input type="text" id="scaleInput"></label><br>
+        <label>Rotation: <input type="text" id="rotationInput"></label><br>
+        <button id="resetBtn">Reset</button>
+        <button id="deleteBtn">Delete</button>
+    </div>
+    <script src="app.js" type="module"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+</body>
+</html>

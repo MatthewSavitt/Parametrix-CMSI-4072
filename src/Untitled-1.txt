@@ -1,0 +1,19 @@
+procedure DrawCurve(function x(t: real) : real;
+                    function y(t: real) : real;
+                    t_1, t_2 : real;
+                    N : integer);
+{Draw the curve (x(t), y(t)) using N equispaced samples in [t_1, t_2].}
+var 
+    i : integer;
+    t, incr : real;
+begin
+    if N <= 1 then N := 2; {force at least two points}
+    incr := (t_2 - t_1)/(N - 1);
+    MoveTo_(x(t_1), y(t_1)); {move to first point}
+    t := t_1;
+    for i := 1 to (N - 1) do
+    begin
+        t := t + incr,
+        LineTo_(x(t), y(t))
+    end
+end

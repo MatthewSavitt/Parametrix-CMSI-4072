@@ -1,0 +1,41 @@
+/* app.css */
+
+/* Option 1: Import a Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Option 2: Import a local font */
+@font-face {
+  font-family: 'YourCustomFont';
+  src: url('./fonts/your-font.woff2') format('woff2'),
+       url('./fonts/your-font.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Apply the font globally */
+* {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* You can also apply different font weights for different elements */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+}
+
+/* And specific styles for different components */
+button {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+input, select, textarea {
+  font-weight: 400;
+}
+
+/* make app start at very very top left corner*/
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+}
