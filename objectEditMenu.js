@@ -1,4 +1,4 @@
-import * as THREE from './node_modules/three/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.module.js';
 import { parametricFunctions } from './parametricFunctions.js';
 import { applyHoverEffects } from './buttonHover.js';
 import { isGizmo } from './threejs-gizmo.js';
