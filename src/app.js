@@ -5,12 +5,12 @@ import { createSphereMenu } from './sphereMenu.js';
 import { createTorusMenu } from './torusMenu.js';
 import { createConeMenu } from './coneMenu.js';
 import { createCylinderMenu } from './cylinderMenu.js';
+import { createExportMenu } from './exportMenu.js';
 //import { createCustomObjectMenu } from './customObjectMenu.js';
 import { initializeObjectEditMenu, getSelectedObject} from './objectEditMenu.js';
 // import animation manager
 import { AnimationManager } from './animationManager.js';
 import { createPlaybackHUD } from './animationHud.js';
-import { addObject, removeObject, getObjects } from './objectManager.js';
 import { createGizmo } from './threejs-gizmo.js';
 
 const scene = new THREE.Scene();
@@ -52,6 +52,7 @@ createSphereMenu(scene);
 createTorusMenu(scene);
 createConeMenu(scene);
 createCylinderMenu(scene);
+createExportMenu(scene, animManager, getActiveCamera, renderer);
 //createCustomObjectMenu(scene);
 // Initialize the animation HUD
 createPlaybackHUD(animManager, scene);
@@ -75,8 +76,6 @@ window.addEventListener('resize', () => {
     }
     activeCamera.updateProjectionMatrix();
 });
-
-// In app.js, let's add some debug code to verify animations are running:
 
 function animate() {
     requestAnimationFrame(animate);

@@ -7,8 +7,7 @@ import * as THREE from './node_modules/three/build/three.module.js';
 
 export function createCylinderMenu(scene) {
     // Create the menu template
-    const { menuContainer } = createMenuTemplate('🥃', 10, 200
-    );
+    const { menuContainer } = createMenuTemplate('🥃', 10, 200 );
     document.body.appendChild(menuContainer);
     // Input elements for position, rotation, and scale
     const properties = ['Position', 'Rotation', 'Scale', 'Radial Segments' /*'Radius Top', 'Radius Bottom'*/];

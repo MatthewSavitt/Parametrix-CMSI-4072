@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "gif.js": "^0.2.0",
+    "omggif": "^1.0.10",
     "three": "^0.164.1",
     "three-orbitcontrols": "^2.110.3"
   },
