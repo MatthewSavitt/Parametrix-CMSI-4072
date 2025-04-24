@@ -1,5 +1,5 @@
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.module.js';
-import '../node_modules/gif.js/dist/gif.js';
+import "https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js";
 const GIF = window.GIF;
 
 export function initializeGIFExport(scene, animationManager, getActiveCamera, renderer) {
