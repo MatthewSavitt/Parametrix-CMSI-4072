@@ -10,52 +10,15 @@ export class AnimationManager {
     }
 
     addAnimation(object, animationConfig) {
+        console.log("Adding animation:", animationConfig);
+        
         // Update start/end times of the timeline if needed
         this.startTime = Math.min(this.startTime, animationConfig.startT);
         this.endTime = Math.max(this.endTime, animationConfig.endT);
         
-        // Check if the object already has animations
+        // Initialize animations array if it doesn't exist
         if (!object.animations) {
             object.animations = [];
-            
-            // Add an update method to the object
-            object.update = (time) => {
-                // Apply all animations for this object, using the provided time
-                object.animations.forEach(anim => {
-                    const { property, axis, startT, endT, functions, loop } = anim;
-                    
-                    // Skip if outside time range and not looping
-                    if (time < startT) return;
-                    if (time > endT && !loop && !this.loop) return;
-                    
-                    // Calculate local time based on global time
-                    let localTime;
-                    if (loop || this.loop) {
-                        // Loop the animation (cycle between startT and endT)
-                        const duration = endT - startT;
-                        const elapsed = time - startT;
-                        localTime = startT + (elapsed % duration);
-                    } else {
-                        // Play once and clamp to endT
-                        localTime = Math.min(time, endT);
-                    }
-                    
-                    // Apply the function to the specified property and axis
-                    if (functions[axis]) {
-                        const { apply, params } = functions[axis];
-                        const value = apply(localTime, params);
-                        
-                        // Apply to the object
-                        if (property === 'position') {
-                            object.position[axis] = value;
-                        } else if (property === 'rotation') {
-                            object.rotation[axis] = value;
-                        } else if (property === 'scale') {
-                            object.scale[axis] = Math.max(0.01, value); // Prevent negative/zero scale
-                        }
-                    }
-                });
-            };
         }
         
         // Add this animation to the object's animations
@@ -64,8 +27,49 @@ export class AnimationManager {
         // Add to global animations list
         this.animations.push({ object, ...animationConfig });
         
+        // Ensure the update method is created
+        object.update = (time) => {
+            if (!object.animations || object.animations.length === 0) return;
+            
+            object.animations.forEach(anim => {
+                const { property, axis, startT, endT, functions } = anim;
+                
+                if (time < startT) return;
+                
+                let localTime;
+                if (this.loop) {
+                    const duration = endT - startT;
+                    const elapsed = time - startT;
+                    localTime = startT + (elapsed % duration);
+                } else {
+                    localTime = Math.min(time, endT);
+                }
+                
+                if (functions[axis]) {
+                    const { apply, params } = functions[axis];
+                    const value = apply(localTime, params);
+                    
+                    if (property === 'position') {
+                        object.position[axis] = value;
+                    } else if (property === 'rotation') {
+                        object.rotation[axis] = value;
+                    } else if (property === 'scale') {
+                        object.scale[axis] = Math.max(0.01, value);
+                    } else if (property === 'color' && object.material && object.material.color) {
+                        // Color animation
+                        if (axis === 'r') object.material.color.r = value / 255;
+                        if (axis === 'g') object.material.color.g = value / 255;
+                        if (axis === 'b') object.material.color.b = value / 255;
+                    }
+                }
+            });
+        };
+        
         // Apply animation immediately with current time
         object.update(this.globalTime);
+        
+        // Debug log to verify the animation is added
+        console.log(`Animation added to ${object.uuid}, total animations: ${this.animations.length}`);
     }    addAnimation(object, animationConfig) {
         console.log("Adding animation:", animationConfig);
         

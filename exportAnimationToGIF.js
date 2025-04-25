@@ -50,6 +50,11 @@ export function initializeGIFExport(scene, animationManager, getActiveCamera, re
             }
         } else { // samples mode
             numFrames = totalFrames;
+            // For samples mode, we want the total animation duration to match the original duration
+            // So the delay between frames should be: total duration / number of frames
+            const totalAnimationDuration = duration; // duration in seconds
+            secondsPerFrame = totalAnimationDuration / numFrames;
+            
             for (let i = 0; i < numFrames; i++) {
                 const time = startTime + (duration * (i / (numFrames - 1)));
                 frames.push(time);
@@ -85,6 +90,14 @@ export function initializeGIFExport(scene, animationManager, getActiveCamera, re
                     restoreUIElements(uiElements);
                     enableCameraControls();
                     hideProgressUI();
+                    //play microwave over "ding" sound effect
+                    const audio = new Audio('https://www.soundjay.com/appliances/sounds/microwave-oven-bell-1.mp3'); // credit to soundjay.com, their royalty-free sounds are awesome tbh :)
+                    audio.volume = 0.5; // Set volume to 50%
+                    audio.playbackRate = 1.5; // Set playback speed to 1.5x
+                    audio.loop = false; // Play once
+
+
+                    audio.play();
                     isProcessing = false;
                 });
                 

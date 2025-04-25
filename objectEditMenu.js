@@ -1007,7 +1007,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
 
     // Animate the outline color
     function animateOutlineColor(object, targetColor) {
-        if (!outlineMesh) return;
+        if (!outlineMesh || !outlineMesh.material) return;
 
         const initialColor = new THREE.Color(outlineMesh.material.color.getHex());
         const target = new THREE.Color(targetColor);
@@ -1019,18 +1019,20 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
             const elapsed = time - startTime;
             const progress = Math.min(elapsed / duration, 1);
 
-            outlineMesh.material.color.r = THREE.MathUtils.lerp(initialColor.r, target.r, progress);
-            outlineMesh.material.color.g = THREE.MathUtils.lerp(initialColor.g, target.g, progress);
-            outlineMesh.material.color.b = THREE.MathUtils.lerp(initialColor.b, target.b, progress);
+            // Check if material still exists before animating
+            if (outlineMesh && outlineMesh.material) {
+                outlineMesh.material.color.r = THREE.MathUtils.lerp(initialColor.r, target.r, progress);
+                outlineMesh.material.color.g = THREE.MathUtils.lerp(initialColor.g, target.g, progress);
+                outlineMesh.material.color.b = THREE.MathUtils.lerp(initialColor.b, target.b, progress);
 
-            if (progress < 1) {
-                requestAnimationFrame(animate);
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
             }
         }
 
         requestAnimationFrame(animate);
     }
-
     // Prevent default right-click behavior
     document.addEventListener('contextmenu', (event) => event.preventDefault());
 

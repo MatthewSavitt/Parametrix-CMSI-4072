@@ -6,6 +6,7 @@ import { createTorusMenu } from './torusMenu.js';
 import { createConeMenu } from './coneMenu.js';
 import { createCylinderMenu } from './cylinderMenu.js';
 import { createExportMenu } from './exportMenu.js';
+import { createProjectMenu } from './projectMenu.js';
 //import { createCustomObjectMenu } from './customObjectMenu.js';
 import { initializeObjectEditMenu, getSelectedObject} from './objectEditMenu.js';
 // import animation manager
@@ -53,6 +54,7 @@ createTorusMenu(scene);
 createConeMenu(scene);
 createCylinderMenu(scene);
 createExportMenu(scene, animManager, getActiveCamera, renderer);
+createProjectMenu(scene, animManager, getActiveCamera);
 //createCustomObjectMenu(scene);
 // Initialize the animation HUD
 createPlaybackHUD(animManager, scene);
