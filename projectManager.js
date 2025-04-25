@@ -302,7 +302,7 @@ export class ProjectManager {
                 objData.geometry.tube,
                 objData.geometry.radialSegments,
                 objData.geometry.tubularSegments,
-                objData.geometry.arc || Math.PI * 2  // Default to full circle if not specified
+                objData.geometry.arc
             );
         } else if (objData.type === 'ConeGeometry') {
             geometry = new THREE.ConeGeometry(
