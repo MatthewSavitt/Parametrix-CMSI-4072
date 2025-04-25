@@ -161,7 +161,7 @@ export function createPlaybackHUD(animationManager, scene) {
 
     // Create path icon image
     const pathIcon = document.createElement('img');
-    pathIcon.src = '/../assets/paths.png';
+    pathIcon.src = './paths.png';
     pathIcon.width = 20;
     pathIcon.height = 20;
     pathIcon.style.marginRight = '5px';
@@ -211,7 +211,7 @@ export function createPlaybackHUD(animationManager, scene) {
     
     //create gizmo icon image
     const gizmoIcon = document.createElement('img');
-    gizmoIcon.src = '/../assets/gizmo.PNG';
+    gizmoIcon.src = './gizmo.PNG';
     gizmoIcon.width = 20;
     gizmoIcon.height = 20;
     gizmoIcon.style.marginLeft = '5px';
