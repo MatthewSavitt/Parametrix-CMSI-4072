@@ -232,18 +232,30 @@ export class ProjectManager {
                     Object.keys(anim.functions).forEach(axis => {
                         const func = anim.functions[axis];
                         // Find the function name by checking parametricFunctions
-                        let functionName = null;
-                        for (const [name, definition] of Object.entries(parametricFunctions)) {
-                            if (definition.apply === func.apply) {
-                                functionName = name;
-                                break;
+                        let functionName = func.functionName;
+                        
+                        // If functionName is not available, try to identify it
+                        if (!functionName) {
+                            for (const [name, definition] of Object.entries(parametricFunctions)) {
+                                if (definition.apply === func.apply) {
+                                    functionName = name;
+                                    break;
+                                }
                             }
                         }
                         
                         if (functionName) {
+                            // Create a clean copy of parameters to avoid any reference issues
+                            const cleanParams = {};
+                            if (func.params) {
+                                Object.keys(func.params).forEach(paramName => {
+                                    cleanParams[paramName] = func.params[paramName];
+                                });
+                            }
+                            
                             serializedAnim.functions[axis] = {
                                 type: functionName,
-                                params: { ...func.params }
+                                params: cleanParams
                             };
                         }
                     });
@@ -269,10 +281,23 @@ export class ProjectManager {
             Object.keys(animData.functions).forEach(axis => {
                 const funcData = animData.functions[axis];
                 if (funcData.type && parametricFunctions[funcData.type]) {
+                    // Create a fresh copy of parameters to avoid reference issues
+                    const freshParams = {};
+                    
+                    // Copy only the parameters that exist in the saved animation
+                    if (funcData.params) {
+                        Object.keys(funcData.params).forEach(paramName => {
+                            freshParams[paramName] = funcData.params[paramName];
+                        });
+                    }
+                    
                     reconstructed.functions[axis] = {
                         apply: parametricFunctions[funcData.type].apply,
-                        params: { ...funcData.params }
+                        params: freshParams,  // Use the fresh copy
+                        functionName: funcData.type
                     };
+                } else {
+                    console.error(`Function "${funcData.type}" not found in parametricFunctions`);
                 }
             });
         }

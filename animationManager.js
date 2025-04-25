@@ -20,6 +20,15 @@ export class AnimationManager {
         if (!object.animations) {
             object.animations = [];
         }
+        // Remove any existing animation for the same property and axis
+        object.animations = object.animations.filter(anim => 
+            !(anim.property === animationConfig.property && anim.axis === animationConfig.axis)
+        );
+        
+        // Remove from global animations list too
+        this.animations = this.animations.filter(anim => 
+            !(anim.object === object && anim.property === animationConfig.property && anim.axis === animationConfig.axis)
+        );
         
         // Add this animation to the object's animations
         object.animations.push(animationConfig);
