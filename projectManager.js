@@ -193,6 +193,7 @@ export class ProjectManager {
             params.tube = geometry.parameters.tube;
             params.radialSegments = geometry.parameters.radialSegments;
             params.tubularSegments = geometry.parameters.tubularSegments;
+            params.arc = geometry.parameters.arc;
         } else if (geometry.type === 'ConeGeometry') {
             params.radius = geometry.parameters.radius;
             params.height = geometry.parameters.height;
