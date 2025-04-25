@@ -70,7 +70,7 @@ export const parametricFunctions = {
     },
     squareWave: {
         apply: (t, { amplitude, frequency, phase, verticalShift }) => {
-            const period = 1 / frequency;
+            const period = 1 / (frequency * (Math.PI * 2));
             const halfPeriod = period / 2;
             const adjustedT = (t + phase) % period;
             return adjustedT < halfPeriod ? amplitude + verticalShift : -amplitude + verticalShift;
@@ -79,7 +79,7 @@ export const parametricFunctions = {
     },
     sawtoothWave: {
         apply: (t, { amplitude, frequency, phase, verticalShift }) => {
-            const period = 1 / frequency;
+            const period = 1 / (frequency * (Math.PI * 2));
             const adjustedT = (t + phase) % period;
             return ((2 * amplitude) / period) * adjustedT - amplitude + verticalShift;
         },
