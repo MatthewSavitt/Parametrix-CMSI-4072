@@ -86,4 +86,15 @@ export const parametricFunctions = {
         },
         params: { amplitude: 1, frequency: 1, phase: 0, verticalShift: 0 },
     },
+    stepFunction: {
+        apply: (t, { stepSize, stepHeight, verticalShift }) => {
+            const step = Math.floor(t / stepSize);
+            return step * stepHeight + verticalShift;
+        },
+        params: { stepSize: 1, stepHeight: 1, verticalShift: 0 },
+    },
+    squareRoot: {
+        apply: (t, { timesRoot, verticalShift }) => (timesRoot * Math.sqrt(t)) + verticalShift,
+        params: { timesRoot: 1, verticalShift: 0 },
+    }
 };
