@@ -300,7 +300,6 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         hideContextMenu();
         //add paper crumpling sound
         const audio = new Audio('./paper-crumple.mp3');
-        audio.volume = 0.85; // Set volume to 50%
         audio.play();
     });
 
