@@ -299,7 +299,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         renderer.render(scene, camera);
         hideContextMenu();
         //add paper crumpling sound
-        const audio = new Audio('https://www.soundjay.com/misc/sounds/paper-throw-1.mp3');
+        const audio = new Audio('./paper-crumple.mp3');
         audio.volume = 0.5; // Set volume to 50%
         //start audio .2 seconds in
         audio.currentTime = 0.2; // Start audio at 0.2 seconds
