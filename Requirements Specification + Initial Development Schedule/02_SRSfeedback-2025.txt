@@ -62,9 +62,11 @@ Software Requirements Specification Complete
 
 OVERALL ASSESSMENT:
            Category                                Points
-   Comments from first submission incorporated       8/8
+   Comments from first submission incorporated       0/8
    Spelling and Grammar in document acceptable       2/2
                                                    =====
-   Subtotal                                        10/10
+   Subtotal                                         2/10
    ------------------------------------------------------
-   Total Percentage:   10/10 = 100% which is an A-plus
+   Total Percentage:   2/10 = 20% which is an F on this deliverable.
+
+You didn't incorporate the feedback from the first version.
