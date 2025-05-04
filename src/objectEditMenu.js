@@ -1,4 +1,4 @@
-import * as THREE from './node_modules/three/build/three.module.js';
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.module.js';
 import { parametricFunctions } from './parametricFunctions.js';
 import { applyHoverEffects } from './buttonHover.js';
 import { isGizmo } from './threejs-gizmo.js';
@@ -298,6 +298,9 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
         clearOutline();
         renderer.render(scene, camera);
         hideContextMenu();
+        //add paper crumpling sound
+        const audio = new Audio('./paper-crumple.mp3');
+        audio.play();
     });
 
     //duplicate button
@@ -317,45 +320,56 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
     deepDuplicateButton.addEventListener('click', () => {
         if (!selectedObject) return;
         console.log("Starting dupe of:", selectedObject);
+        
         // STEP 1: Create a clean base clone with new geometries and materials
-        // --------------------------------------------------------------------
         const geometry = selectedObject.geometry.clone();
         const material = selectedObject.material.clone();
         if (material.color) {
             material.color = new THREE.Color(selectedObject.material.color.getHex());
         }
+        
         // Create a completely new mesh with the cloned geometry and material
         const clonedObject = new THREE.Mesh(geometry, material);
-        // Generate a new UUID
         clonedObject.uuid = THREE.MathUtils.generateUUID();
+        
         // Copy transform properties
         clonedObject.position.copy(selectedObject.position);
         clonedObject.rotation.copy(selectedObject.rotation);
         clonedObject.scale.copy(selectedObject.scale);
         clonedObject.animations = [];
+        
         scene.add(clonedObject);
-        // STEP 2: Recreate all animations from scratch
-        // --------------------------------------------------------------------
-        console.log(`Original object has ${selectedObject.animations ? selectedObject.animations.length : 0} animations`);
+        
+        // STEP 2: Recreate only the CURRENT animations (not overwritten ones)
         if (selectedObject.animations && selectedObject.animations.length > 0) {
-            // Process each animation
+            // Create a map to track only the latest animation per property/axis
+            const latestAnimations = new Map();
+            
+            // Go through all animations and keep only the latest one for each property/axis
             selectedObject.animations.forEach(origAnim => {
+                const key = `${origAnim.property}-${origAnim.axis}`;
+                latestAnimations.set(key, origAnim);
+            });
+            
+            // Now process only the latest animations
+            latestAnimations.forEach(origAnim => {
                 if (!origAnim || !origAnim.property || !origAnim.axis || !origAnim.functions) {
                     console.warn("Skipping invalid animation:", origAnim);
                     return;
                 }
+                
                 const property = origAnim.property;
                 const axis = origAnim.axis;
+                
                 // Extract function definitions for this axis
                 const axisFunctions = origAnim.functions[axis];
                 if (!axisFunctions || !axisFunctions.apply) {
                     console.warn(`Missing function for ${property}.${axis}`);
                     return;
                 }
-                // Get the function name - handle case where it might be missing
+                
+                // Get the function name
                 let funcName = axisFunctions.functionName;
-                // If functionName is missing (especially for color animations),
-                // try to identify the function by comparing against known parametric functions
                 if (!funcName) {
                     // Try to identify the function by its apply method
                     const applyFunc = axisFunctions.apply.toString();
@@ -366,18 +380,20 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
                             break;
                         }
                     }
-                    // If still not found, use default function (usually sine wave)
+                    
                     if (!funcName) {
                         funcName = 'sineWave';
                         console.warn(`Could not identify function for ${property}.${axis}, using sineWave as fallback`);
                     }
                 }
+                
                 // Make sure the parametric function exists
                 if (!parametricFunctions[funcName]) {
                     console.warn(`Function ${funcName} not found in parametricFunctions`);
                     return;
                 }
-                // Create a completely new params object
+                
+                // Create a completely new params object with deep copy
                 const newParams = {};
                 if (axisFunctions.params) {
                     Object.keys(axisFunctions.params).forEach(paramName => {
@@ -387,6 +403,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
                     // Fall back to default params
                     Object.assign(newParams, parametricFunctions[funcName].params);
                 }
+                
                 // Create a new animation configuration
                 const newAnimConfig = {
                     property: property,
@@ -402,25 +419,27 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
                         }
                     }
                 };
+                
                 console.log(`Adding ${funcName} animation for ${property}.${axis}`, newParams);
                 
                 // Add the animation to the animation manager
                 animationManager.addAnimation(clonedObject, newAnimConfig);
             });
         }
+        
         // STEP 3: Redraw animation paths if needed
-        // --------------------------------------------------------------------
         if (window.showAnimationPaths !== false) {
             redrawAllAnimationPaths();
         }
+        
         // STEP 4: Select the cloned object
-        // --------------------------------------------------------------------
         selectedObject = clonedObject;
         clearOutline();
         updateOutline(selectedObject);
         renderer.render(scene, camera);
+        
         console.log(`Cloned object now has ${clonedObject.animations ? clonedObject.animations.length : 0} animations`);
-        console.log("Deep duplication complete with color animation support!");
+        console.log("Deep duplication complete!");
     });
     //add button hover effects
     applyHoverEffects(deepDuplicateButton);
@@ -1007,7 +1026,7 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
 
     // Animate the outline color
     function animateOutlineColor(object, targetColor) {
-        if (!outlineMesh) return;
+        if (!outlineMesh || !outlineMesh.material) return;
 
         const initialColor = new THREE.Color(outlineMesh.material.color.getHex());
         const target = new THREE.Color(targetColor);
@@ -1019,18 +1038,20 @@ export function initializeObjectEditMenu(scene, camera, renderer, animationManag
             const elapsed = time - startTime;
             const progress = Math.min(elapsed / duration, 1);
 
-            outlineMesh.material.color.r = THREE.MathUtils.lerp(initialColor.r, target.r, progress);
-            outlineMesh.material.color.g = THREE.MathUtils.lerp(initialColor.g, target.g, progress);
-            outlineMesh.material.color.b = THREE.MathUtils.lerp(initialColor.b, target.b, progress);
+            // Check if material still exists before animating
+            if (outlineMesh && outlineMesh.material) {
+                outlineMesh.material.color.r = THREE.MathUtils.lerp(initialColor.r, target.r, progress);
+                outlineMesh.material.color.g = THREE.MathUtils.lerp(initialColor.g, target.g, progress);
+                outlineMesh.material.color.b = THREE.MathUtils.lerp(initialColor.b, target.b, progress);
 
-            if (progress < 1) {
-                requestAnimationFrame(animate);
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                }
             }
         }
 
         requestAnimationFrame(animate);
     }
-
     // Prevent default right-click behavior
     document.addEventListener('contextmenu', (event) => event.preventDefault());
 

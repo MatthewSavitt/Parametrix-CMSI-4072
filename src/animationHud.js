@@ -161,7 +161,7 @@ export function createPlaybackHUD(animationManager, scene) {
 
     // Create path icon image
     const pathIcon = document.createElement('img');
-    pathIcon.src = '/../assets/paths.png';
+    pathIcon.src = './paths.png';
     pathIcon.width = 20;
     pathIcon.height = 20;
     pathIcon.style.marginRight = '5px';
@@ -180,6 +180,21 @@ export function createPlaybackHUD(animationManager, scene) {
     pathToggleCheckbox.checked = true; // Default to showing paths
     pathToggleCheckbox.id = 'path-toggle';
 
+    // Listen for project loading to update UI state
+    window.addEventListener('project-loaded', (event) => {
+        if (event.detail && event.detail.showAnimationPaths !== undefined) {
+            window.showAnimationPaths = event.detail.showAnimationPaths;
+            togglePathsButton.textContent = window.showAnimationPaths ? '👁️ Paths: ON' : '👁️ Paths: OFF';
+            
+            // Update visibility of all paths
+            scene.traverse(obj => {
+                if (obj.isAnimationPath) {
+                    obj.visible = window.showAnimationPaths;
+                }
+            });
+        }
+    });
+
     // Add components to container in correct order
     pathToggleContainer.appendChild(pathLabelContent);
     pathToggleContainer.appendChild(pathToggleCheckbox);
@@ -194,11 +209,27 @@ export function createPlaybackHUD(animationManager, scene) {
     gizmoToggleCheckbox.id = 'gizmo-toggle';
     gizmoToggleCheckbox.checked = true; // Default to visible
     
+    //create gizmo icon image
+    const gizmoIcon = document.createElement('img');
+    gizmoIcon.src = './gizmo.PNG';
+    gizmoIcon.width = 20;
+    gizmoIcon.height = 20;
+    gizmoIcon.style.marginLeft = '5px';
+
     const gizmoToggleLabel = document.createElement('label');
     gizmoToggleLabel.htmlFor = 'gizmo-toggle';
     gizmoToggleLabel.textContent = 'Show Gizmo:';
     gizmoToggleLabel.style.marginRight = '10px';
     
+    // Create label container with icon and text
+    const gizmoLabelContent = document.createElement('div');
+    gizmoLabelContent.style.display = 'flex';
+    gizmoLabelContent.style.alignItems = 'right';
+    gizmoLabelContent.style.marginRight = '10px';
+    gizmoLabelContent.appendChild(gizmoIcon);
+    gizmoLabelContent.appendChild(gizmoToggleLabel);
+    gizmoToggleContainer.appendChild(gizmoLabelContent);
+    // Append the checkbox to the label container
     gizmoToggleContainer.appendChild(gizmoToggleLabel);
     gizmoToggleContainer.appendChild(gizmoToggleCheckbox);
     

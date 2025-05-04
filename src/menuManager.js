@@ -10,6 +10,12 @@ export const menuManager = {
         // Set and show the new active menu
         this.activeMenu = menuContainer;
         this.activeMenu.style.display = 'block';
+
+        // play menu open sound
+        const audio = new Audio('menuOpen.mp3'); // Adjust the path to your sound file
+        audio.volume = 0.5; // Set volume to 50%
+        audio.play();
+        audio.loop = false; // Play sound once
     },
     
     closeMenu: function() {
